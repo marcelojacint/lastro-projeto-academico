@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: lastro
+  config:
+    import: optional:file:../.env[.properties]
+  datasource:
+    url: jdbc:postgresql://localhost:${DB_PORTA:5433}/${POSTGRES_DB:lastro}
+    username: ${POSTGRES_USER:lastro}
+    password: ${POSTGRES_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: ${UPLOAD_TAMANHO_MAXIMO:5MB}
+      max-request-size: ${UPLOAD_TAMANHO_MAXIMO:5MB}
+
+server:
+  port: 8081
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  api-docs:
+    path: /api/v3/api-docs
+  swagger-ui:
+    path: /api/swagger-ui.html
+
+logging:
+  level:
+    br.edu.uniesp.lastro: ${LOG_NIVEL:INFO}
