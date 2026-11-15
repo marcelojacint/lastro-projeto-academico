@@ -1,0 +1,52 @@
+name: História de usuário
+description: Nova história do backlog
+title: "US-XX · "
+labels: [historia, mvp]
+body:
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição
+      placeholder: Como <perfil>, quero <ação>, para <benefício>.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios de aceitação
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: tarefas
+    attributes:
+      label: Tarefas
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: bloqueado-por
+    attributes:
+      label: Bloqueado por
+      placeholder: "#número das issues que precisam estar concluídas antes"
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options: [Alta, Média, Baixa]
+    validations:
+      required: true
+  - type: dropdown
+    id: epico
+    attributes:
+      label: Épico
+      options: [Produtos, Fornecedores, Importação, Associação, Precificação, Histórico, DevOps]
+    validations:
+      required: true
+  - type: dropdown
+    id: estimativa
+    attributes:
+      label: Estimativa em pontos
+      options: ["1", "2", "3", "5", "8", A definir]
