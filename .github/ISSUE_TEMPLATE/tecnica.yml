@@ -1,0 +1,45 @@
+name: História técnica
+description: Tarefa de DevOps, infraestrutura ou contrato entre módulos
+title: "TS-XX · "
+labels: [tecnica, mvp]
+body:
+  - type: textarea
+    id: descricao
+    attributes:
+      label: Descrição
+      placeholder: Como dupla, queremos <ação>, para <benefício>.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios
+    attributes:
+      label: Critérios de aceitação
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: tarefas
+    attributes:
+      label: Tarefas
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: input
+    id: rnf
+    attributes:
+      label: Requisito não funcional atendido
+      placeholder: RNF01, RNF02...
+  - type: input
+    id: bloqueado-por
+    attributes:
+      label: Bloqueado por
+      placeholder: "#número das issues que precisam estar concluídas antes"
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options: [Alta, Média, Baixa]
+    validations:
+      required: true
