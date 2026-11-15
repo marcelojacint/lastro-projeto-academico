@@ -1,0 +1,30 @@
+<mat-toolbar class="barra">
+  <span class="marca">Lastro</span>
+</mat-toolbar>
+
+<mat-sidenav-container class="conteiner">
+  <mat-sidenav mode="side" opened class="menu">
+    <nav aria-label="Menu principal">
+      <mat-nav-list>
+        @for (item of menu; track item.rota) {
+          <a
+            mat-list-item
+            [routerLink]="item.rota"
+            routerLinkActive
+            #ativo="routerLinkActive"
+            [activated]="ativo.isActive"
+          >
+            <mat-icon matListItemIcon aria-hidden="true">{{ item.icone }}</mat-icon>
+            <span matListItemTitle>{{ item.rotulo }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <main class="pagina">
+      <router-outlet />
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
