@@ -78,7 +78,68 @@ Total do MVP: 59 pontos em histórias de usuário, mais 2 pontos do contrato té
 - Um card só sai do Backlog com critérios de aceitação, tarefas e dependências definidos.
 - Commits em Conventional Commits, em português.
 
-As instruções de execução, testes, pipeline e implantação entram neste README junto com os cards TS-02, TS-05 e TS-06.
+## Desenvolvimento local
+
+### Requisitos
+
+| Ferramenta | Versão |
+| --- | --- |
+| Java | 21 |
+| Maven | 3.9 ou mais nova (ou o `./mvnw` da pasta `backend`) |
+| Node.js | 22.22.3 ou mais nova (a pasta `frontend` tem `.nvmrc`; com nvm, rode `nvm use`) |
+| Docker | com Compose v2, usuário no grupo `docker` |
+
+### Estrutura
+
+| Pasta | Conteúdo |
+| --- | --- |
+| `backend/` | API Spring Boot 4.1 (Java 21, Maven) |
+| `frontend/` | Aplicação Angular 22 com Angular Material |
+| `docs/` | PRD e backlog detalhado |
+
+### Subir o ambiente
+
+1. Copiar as variáveis de ambiente e ajustar a senha do banco:
+
+   ```
+   cp .env.example .env
+   ```
+
+2. Subir o PostgreSQL 16 em `localhost:5433` (porta definida por `DB_PORTA`):
+
+   ```
+   docker compose up -d db
+   ```
+
+3. Subir a API em `http://localhost:8081`, com o perfil `local`:
+
+   ```
+   cd backend
+   mvn spring-boot:run -Dspring-boot.run.profiles=local
+   ```
+
+   A API lê o `.env` da raiz. Health em `http://localhost:8081/actuator/health` e Swagger em `http://localhost:8081/api/swagger-ui.html`.
+
+4. Subir o front em `http://localhost:4200`, que repassa `/api` para a API:
+
+   ```
+   cd frontend
+   npm ci
+   npm start
+   ```
+
+### Testes e verificações
+
+| Onde | Comando | O que faz |
+| --- | --- | --- |
+| `backend/` | `mvn verify` | Testes com Testcontainers (precisa do Docker) e checagem de formatação do Spotless |
+| `backend/` | `mvn spotless:apply` | Formata o código Java |
+| `frontend/` | `npm run lint` | ESLint e checagem do Prettier |
+| `frontend/` | `npm run format` | Formata o código do front |
+| `frontend/` | `npm run test:ci` | Testes do front uma vez, sem modo observação |
+| `frontend/` | `npm run build` | Build de produção em `frontend/dist/lastro-web` |
+
+As instruções de pipeline e de implantação entram neste README com os cards TS-03, TS-05 e TS-06.
 
 ## Equipe
 
