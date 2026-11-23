@@ -2,8 +2,9 @@ package br.edu.uniesp.lastro.produto.infraestrutura;
 
 import br.edu.uniesp.lastro.produto.dominio.Produto;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface ProdutoRepository extends JpaRepository<Produto, Long> {
+public interface ProdutoRepository extends JpaRepository<Produto, Long>, JpaSpecificationExecutor<Produto> {
 
     boolean existsByCodigo(String codigo);
 
