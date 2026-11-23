@@ -1,0 +1,21 @@
+CREATE TABLE produto (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    codigo VARCHAR(50),
+    nome VARCHAR(200) NOT NULL,
+    categoria VARCHAR(100),
+    unidade VARCHAR(20),
+    preco_compra NUMERIC(12, 2),
+    preco_venda NUMERIC(12, 2) NOT NULL,
+    estoque_atual NUMERIC(12, 3) NOT NULL DEFAULT 0,
+    estoque_minimo NUMERIC(12, 3) NOT NULL DEFAULT 0,
+    status VARCHAR(10) NOT NULL DEFAULT 'ATIVO',
+    criado_em TIMESTAMP WITH TIME ZONE NOT NULL,
+    atualizado_em TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT uk_produto_codigo UNIQUE (codigo),
+    CONSTRAINT ck_produto_nome_preenchido CHECK (btrim(nome) <> ''),
+    CONSTRAINT ck_produto_preco_compra_nao_negativo CHECK (preco_compra >= 0),
+    CONSTRAINT ck_produto_preco_venda_nao_negativo CHECK (preco_venda >= 0),
+    CONSTRAINT ck_produto_estoque_atual_nao_negativo CHECK (estoque_atual >= 0),
+    CONSTRAINT ck_produto_estoque_minimo_nao_negativo CHECK (estoque_minimo >= 0),
+    CONSTRAINT ck_produto_status CHECK (status IN ('ATIVO', 'INATIVO'))
+);
