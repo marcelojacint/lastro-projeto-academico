@@ -17,3 +17,9 @@ export interface Produto extends ProdutoRequisicao {
   criadoEm: string;
   atualizadoEm: string;
 }
+
+export interface FiltroProduto {
+  nome: string;
+  categoria: string;
+  status: StatusProduto | '';
+}

@@ -1,0 +1,107 @@
+<div class="cabecalho">
+  <h1>Produtos</h1>
+  <a mat-flat-button routerLink="/produtos/novo">
+    <mat-icon aria-hidden="true">add</mat-icon>
+    Novo produto
+  </a>
+</div>
+
+<form [formGroup]="filtros" class="filtros" role="search">
+  <mat-form-field class="campo-busca">
+    <mat-label>Buscar por nome</mat-label>
+    <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+    <input matInput formControlName="nome" />
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Categoria</mat-label>
+    <input matInput formControlName="categoria" />
+  </mat-form-field>
+
+  <mat-form-field class="campo-status">
+    <mat-label>Status</mat-label>
+    <mat-select formControlName="status">
+      <mat-option value="">Todos</mat-option>
+      @for (status of statusDisponiveis; track status) {
+        <mat-option [value]="status">{{ rotuloStatus(status) }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</form>
+
+@let resultado = pagina();
+
+@if (resultado && resultado.itens.length > 0) {
+  <table mat-table [dataSource]="resultado.itens" class="tabela">
+    <ng-container matColumnDef="codigo">
+      <th mat-header-cell *matHeaderCellDef>Código</th>
+      <td mat-cell *matCellDef="let produto">{{ produto.codigo ?? '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef>Nome</th>
+      <td mat-cell *matCellDef="let produto">{{ produto.nome }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="categoria">
+      <th mat-header-cell *matHeaderCellDef>Categoria</th>
+      <td mat-cell *matCellDef="let produto">{{ produto.categoria ?? '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let produto">
+        <span class="status" [class.inativo]="produto.status === 'INATIVO'">
+          {{ rotuloStatus(produto.status) }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estoqueAtual">
+      <th mat-header-cell *matHeaderCellDef class="numero">Estoque atual</th>
+      <td mat-cell *matCellDef="let produto" class="numero">
+        {{ produto.estoqueAtual | number: '1.0-3' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="estoqueMinimo">
+      <th mat-header-cell *matHeaderCellDef class="numero">Estoque mínimo</th>
+      <td mat-cell *matCellDef="let produto" class="numero">
+        {{ produto.estoqueMinimo | number: '1.0-3' }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="precoVenda">
+      <th mat-header-cell *matHeaderCellDef class="numero">Preço de venda</th>
+      <td mat-cell *matCellDef="let produto" class="numero">
+        {{ produto.precoVenda | currency }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef><span class="oculto">Ações</span></th>
+      <td mat-cell *matCellDef="let produto" class="acoes">
+        <a
+          mat-icon-button
+          [routerLink]="['/produtos', produto.id]"
+          [attr.aria-label]="'Editar ' + produto.nome"
+        >
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </a>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+    <tr mat-row *matRowDef="let produto; columns: colunas"></tr>
+  </table>
+
+  <mat-paginator
+    [length]="resultado.totalItens"
+    [pageIndex]="resultado.pagina"
+    [pageSize]="tamanhoPagina"
+    [hidePageSize]="true"
+    (page)="mudarPagina($event)"
+  />
+} @else if (!carregando()) {
+  <p class="lista-vazia">{{ mensagemListaVazia() }}</p>
+}
