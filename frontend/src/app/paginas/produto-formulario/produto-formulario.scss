@@ -1,0 +1,29 @@
+.formulario {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  mat-form-field {
+    flex: 1 1 200px;
+  }
+
+  .campo-curto {
+    flex: 0 1 160px;
+  }
+
+  .campo-longo {
+    flex: 2 1 320px;
+  }
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

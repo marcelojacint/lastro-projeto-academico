@@ -1,0 +1,86 @@
+<h1>{{ id() === null ? 'Novo produto' : 'Editar produto' }}</h1>
+
+<form [formGroup]="formulario" (ngSubmit)="salvar()" novalidate class="formulario">
+  <div class="linha">
+    <mat-form-field class="campo-curto">
+      <mat-label>Código</mat-label>
+      <input matInput formControlName="codigo" />
+      <mat-error>{{ mensagemErro('codigo') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="campo-longo">
+      <mat-label>Nome</mat-label>
+      <input matInput formControlName="nome" required />
+      <mat-error>{{ mensagemErro('nome') }}</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="linha">
+    <mat-form-field>
+      <mat-label>Categoria</mat-label>
+      <input matInput formControlName="categoria" />
+      <mat-error>{{ mensagemErro('categoria') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="campo-curto">
+      <mat-label>Unidade</mat-label>
+      <input matInput formControlName="unidade" placeholder="UN, KG, CX" />
+      <mat-error>{{ mensagemErro('unidade') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="campo-curto">
+      <mat-label>Status</mat-label>
+      <mat-select formControlName="status">
+        @for (status of statusDisponiveis; track status) {
+          <mat-option [value]="status">{{ status === 'ATIVO' ? 'Ativo' : 'Inativo' }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="linha">
+    <mat-form-field>
+      <mat-label>Preço de compra</mat-label>
+      <input
+        matInput
+        formControlName="precoCompra"
+        inputmode="decimal"
+        placeholder="R$ 0,00"
+        (blur)="formatarCampoMoeda('precoCompra')"
+      />
+      <mat-error>{{ mensagemErro('precoCompra') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Preço de venda</mat-label>
+      <input
+        matInput
+        formControlName="precoVenda"
+        inputmode="decimal"
+        placeholder="R$ 0,00"
+        required
+        (blur)="formatarCampoMoeda('precoVenda')"
+      />
+      <mat-error>{{ mensagemErro('precoVenda') }}</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="linha">
+    <mat-form-field>
+      <mat-label>Estoque atual</mat-label>
+      <input matInput type="number" min="0" step="0.001" formControlName="estoqueAtual" />
+      <mat-error>{{ mensagemErro('estoqueAtual') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Estoque mínimo</mat-label>
+      <input matInput type="number" min="0" step="0.001" formControlName="estoqueMinimo" />
+      <mat-error>{{ mensagemErro('estoqueMinimo') }}</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="acoes">
+    <a mat-button routerLink="/produtos">Cancelar</a>
+    <button mat-flat-button type="submit" [disabled]="salvando()">Salvar</button>
+  </div>
+</form>
