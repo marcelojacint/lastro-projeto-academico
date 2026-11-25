@@ -1,0 +1,76 @@
+.painel {
+  max-width: 720px;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0 0 16px;
+    font: var(--mat-sys-title-medium);
+  }
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  mat-form-field {
+    flex: 1 1 200px;
+  }
+
+  .campo-longo {
+    flex: 2 1 320px;
+  }
+}
+
+.acoes {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  .ativo {
+    margin-right: auto;
+  }
+}
+
+.tabela {
+  width: 100%;
+}
+
+.selecionado {
+  background: var(--mat-sys-surface-container-high);
+}
+
+.acoes-linha {
+  width: 56px;
+  text-align: right;
+}
+
+.status {
+  color: var(--mat-sys-primary);
+  font-weight: 500;
+
+  &.inativo {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.lista-vazia {
+  padding: 32px 0;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+}

@@ -1,0 +1,105 @@
+<h1>Fornecedores</h1>
+
+<section class="painel" aria-labelledby="titulo-formulario">
+  <h2 id="titulo-formulario">
+    {{ editando() === null ? 'Novo fornecedor' : 'Editar fornecedor' }}
+  </h2>
+
+  <form [formGroup]="formulario" (ngSubmit)="salvar()" novalidate class="formulario">
+    <div class="linha">
+      <mat-form-field class="campo-longo">
+        <mat-label>Nome</mat-label>
+        <input matInput formControlName="nome" required />
+        <mat-error>{{ mensagemErro('nome') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>CNPJ</mat-label>
+        <input
+          matInput
+          formControlName="cnpj"
+          inputmode="numeric"
+          placeholder="00.000.000/0000-00"
+        />
+        <mat-error>{{ mensagemErro('cnpj') }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="linha">
+      <mat-form-field>
+        <mat-label>Contato</mat-label>
+        <input matInput formControlName="contato" />
+        <mat-error>{{ mensagemErro('contato') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>Layout do PDF</mat-label>
+        <mat-select formControlName="layoutPdf" required>
+          @for (layout of layouts; track layout) {
+            <mat-option [value]="layout">{{ rotuloLayout(layout) }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ mensagemErro('layoutPdf') }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="acoes">
+      @if (editando() !== null) {
+        <mat-slide-toggle formControlName="ativo" class="ativo">Fornecedor ativo</mat-slide-toggle>
+        <button mat-button type="button" (click)="novo()">Cancelar</button>
+      }
+      <button mat-flat-button type="submit" [disabled]="salvando()">Salvar</button>
+    </div>
+  </form>
+</section>
+
+@if (fornecedores().length > 0) {
+  <table mat-table [dataSource]="fornecedores()" class="tabela">
+    <ng-container matColumnDef="nome">
+      <th mat-header-cell *matHeaderCellDef>Nome</th>
+      <td mat-cell *matCellDef="let fornecedor">{{ fornecedor.nome }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="cnpj">
+      <th mat-header-cell *matHeaderCellDef>CNPJ</th>
+      <td mat-cell *matCellDef="let fornecedor">{{ formatarCnpj(fornecedor.cnpj) || '—' }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="layoutPdf">
+      <th mat-header-cell *matHeaderCellDef>Layout do PDF</th>
+      <td mat-cell *matCellDef="let fornecedor">{{ rotuloLayout(fornecedor.layoutPdf) }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let fornecedor">
+        <span class="status" [class.inativo]="!fornecedor.ativo">
+          {{ fornecedor.ativo ? 'Ativo' : 'Inativo' }}
+        </span>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="acoes">
+      <th mat-header-cell *matHeaderCellDef><span class="oculto">Ações</span></th>
+      <td mat-cell *matCellDef="let fornecedor" class="acoes-linha">
+        <button
+          mat-icon-button
+          type="button"
+          (click)="editar(fornecedor)"
+          [attr.aria-label]="'Editar ' + fornecedor.nome"
+        >
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+    <tr
+      mat-row
+      *matRowDef="let fornecedor; columns: colunas"
+      [class.selecionado]="editando()?.id === fornecedor.id"
+    ></tr>
+  </table>
+} @else if (!carregando()) {
+  <p class="lista-vazia">Nenhum fornecedor cadastrado.</p>
+}
