@@ -1,0 +1,103 @@
+<h1>Enviar PDF do fornecedor</h1>
+
+@let importacao = recebida();
+
+@if (importacao) {
+  <section class="painel confirmacao" role="status" aria-labelledby="titulo-confirmacao">
+    <h2 id="titulo-confirmacao">
+      <mat-icon aria-hidden="true">check_circle</mat-icon>
+      Importação recebida
+    </h2>
+
+    <dl class="dados">
+      <dt>Id da importação</dt>
+      <dd>
+        <code class="id">{{ importacao.id }}</code>
+      </dd>
+      <dt>Fornecedor</dt>
+      <dd>{{ importacao.fornecedorNome }}</dd>
+      <dt>Arquivo</dt>
+      <dd>{{ importacao.nomeArquivo }} · {{ formatarTamanho(importacao.tamanhoBytes) }}</dd>
+      <dt>Status</dt>
+      <dd><app-status-importacao [status]="importacao.status" /></dd>
+    </dl>
+
+    <div class="acoes">
+      <button mat-button type="button" (click)="enviarOutro()">Enviar outro PDF</button>
+      <a mat-flat-button routerLink="/importacoes">Ver importações</a>
+    </div>
+  </section>
+} @else {
+  <section class="painel">
+    @if (!carregando() && fornecedoresAtivos().length === 0) {
+      <p class="sem-fornecedor">
+        Nenhum fornecedor ativo. <a routerLink="/fornecedores">Cadastre um fornecedor</a> antes de
+        enviar um PDF.
+      </p>
+    } @else {
+      <form [formGroup]="formulario" (ngSubmit)="enviar()" novalidate class="formulario">
+        <mat-form-field>
+          <mat-label>Fornecedor</mat-label>
+          <mat-select formControlName="fornecedorId" required>
+            @for (fornecedor of fornecedoresAtivos(); track fornecedor.id) {
+              <mat-option [value]="fornecedor.id">{{ fornecedor.nome }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Só aparecem fornecedores ativos</mat-hint>
+          <mat-error>{{ mensagemErroFornecedor() }}</mat-error>
+        </mat-form-field>
+
+        <div class="campo-arquivo">
+          <span class="rotulo" id="rotulo-arquivo">Tabela de preços</span>
+          <input
+            #seletor
+            type="file"
+            accept="application/pdf,.pdf"
+            class="oculto"
+            tabindex="-1"
+            aria-hidden="true"
+            (change)="aoEscolherArquivo($event)"
+          />
+          <div class="escolha">
+            <button
+              mat-stroked-button
+              type="button"
+              id="botao-arquivo"
+              aria-labelledby="rotulo-arquivo botao-arquivo"
+              [attr.aria-describedby]="
+                erroArquivo() ? 'ajuda-arquivo erro-arquivo' : 'ajuda-arquivo'
+              "
+              (click)="seletor.click()"
+            >
+              <mat-icon aria-hidden="true">attach_file</mat-icon>
+              {{ arquivo() ? 'Trocar arquivo' : 'Escolher PDF' }}
+            </button>
+            <span class="nome-arquivo" aria-live="polite">
+              @if (arquivo(); as escolhido) {
+                {{ escolhido.name }} · {{ formatarTamanho(escolhido.size) }}
+              } @else {
+                Nenhum arquivo escolhido
+              }
+            </span>
+          </div>
+          <p id="ajuda-arquivo" class="ajuda">
+            PDF de até {{ tamanhoMaximoMb }} MB, no layout cadastrado para o fornecedor
+          </p>
+          @if (erroArquivo()) {
+            <p id="erro-arquivo" class="erro" role="alert">
+              <mat-icon aria-hidden="true">error</mat-icon>
+              {{ erroArquivo() }}
+            </p>
+          }
+        </div>
+
+        <div class="acoes">
+          <a mat-button routerLink="/importacoes">Cancelar</a>
+          <button mat-flat-button type="submit" [disabled]="enviando()">
+            {{ enviando() ? 'Enviando…' : 'Enviar' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+}
