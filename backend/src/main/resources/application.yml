@@ -14,10 +14,12 @@ spring:
   servlet:
     multipart:
       max-file-size: ${UPLOAD_TAMANHO_MAXIMO:5MB}
-      max-request-size: ${UPLOAD_TAMANHO_MAXIMO:5MB}
+      max-request-size: 10MB
 
 server:
   port: 8081
+  tomcat:
+    max-swallow-size: 10MB
 
 management:
   endpoints:
