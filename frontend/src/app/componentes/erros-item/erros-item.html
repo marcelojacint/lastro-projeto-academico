@@ -1,0 +1,15 @@
+@if (erros().length > 0) {
+  <ul class="erros">
+    @for (erro of erros(); track erro.codigo) {
+      <li class="erro">
+        <mat-icon aria-hidden="true">warning</mat-icon>
+        <span>{{ erro.mensagem }}</span>
+      </li>
+    }
+  </ul>
+} @else {
+  <span class="sem-erros">
+    <span aria-hidden="true">—</span>
+    <span class="oculto">Sem erros</span>
+  </span>
+}
