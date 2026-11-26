@@ -35,7 +35,7 @@ class HistoricoPrecoTest {
     @Test
     void deveRecusarItemInvalidoNoHistorico() {
         ItemImportado invalido =
-                ItemImportado.registrarValidando(IMPORTACAO, item("0"), LayoutPdf.TABELA_REFERENCIA, null);
+                ItemImportado.registrarValidando(IMPORTACAO, item("0"), LayoutPdf.TABELA_REFERENCIA, null, false);
 
         assertThat(invalido.getSituacao()).isEqualTo(SituacaoItem.INVALIDO);
         assertThatThrownBy(() -> HistoricoPreco.doItem(invalido, AGORA))
@@ -46,7 +46,7 @@ class HistoricoPrecoTest {
     @Test
     void deveRecusarItemPendenteDeAssociacaoNoHistorico() {
         ItemImportado pendente =
-                ItemImportado.registrarValidando(IMPORTACAO, item("35.00"), LayoutPdf.TABELA_REFERENCIA, null);
+                ItemImportado.registrarValidando(IMPORTACAO, item("35.00"), LayoutPdf.TABELA_REFERENCIA, null, false);
 
         assertThat(pendente.getSituacao()).isEqualTo(SituacaoItem.PENDENTE_ASSOCIACAO);
         assertThatThrownBy(() -> HistoricoPreco.doItem(pendente, AGORA))

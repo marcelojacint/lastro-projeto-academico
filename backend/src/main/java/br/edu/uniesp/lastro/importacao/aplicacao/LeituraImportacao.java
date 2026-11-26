@@ -2,6 +2,7 @@ package br.edu.uniesp.lastro.importacao.aplicacao;
 
 import br.edu.uniesp.lastro.fornecedor.dominio.LayoutPdf;
 import br.edu.uniesp.lastro.importacao.dominio.ApresentacaoFornecedor;
+import br.edu.uniesp.lastro.importacao.dominio.CatalogoProdutos;
 import br.edu.uniesp.lastro.importacao.dominio.FalhaLeituraException;
 import br.edu.uniesp.lastro.importacao.dominio.Importacao;
 import br.edu.uniesp.lastro.importacao.dominio.ItemExtraido;
@@ -26,12 +27,17 @@ public class LeituraImportacao {
     private final ExtratorTextoPdf extrator;
     private final ApresentacaoFornecedorRepository apresentacoes;
     private final ItemImportadoRepository itens;
+    private final AssociacaoProdutos associacao;
 
     public LeituraImportacao(
-            ExtratorTextoPdf extrator, ApresentacaoFornecedorRepository apresentacoes, ItemImportadoRepository itens) {
+            ExtratorTextoPdf extrator,
+            ApresentacaoFornecedorRepository apresentacoes,
+            ItemImportadoRepository itens,
+            AssociacaoProdutos associacao) {
         this.extrator = extrator;
         this.apresentacoes = apresentacoes;
         this.itens = itens;
+        this.associacao = associacao;
     }
 
     public void ler(Importacao importacao, LayoutPdf layout, byte[] conteudo) {
@@ -43,12 +49,15 @@ public class LeituraImportacao {
             List<ItemExtraido> extraidos = leitor.get().ler(extrator.extrairLinhas(conteudo));
             Instant agora = Instant.now();
             Map<String, Long> apresentacoesDaLeitura = new HashMap<>();
+            CatalogoProdutos catalogo = associacao.carregarCatalogo();
             List<ItemImportado> registrados = extraidos.stream()
-                    .map(item -> ItemImportado.registrarValidando(
-                            importacao.getId(),
-                            item,
-                            layout,
-                            resolverApresentacao(importacao.getFornecedorId(), item, apresentacoesDaLeitura, agora)))
+                    .map(item -> {
+                        Long apresentacaoId =
+                                resolverApresentacao(importacao.getFornecedorId(), item, apresentacoesDaLeitura, agora);
+                        boolean associada = associacao.associar(apresentacaoId, item.descricao(), catalogo, agora);
+                        return ItemImportado.registrarValidando(
+                                importacao.getId(), item, layout, apresentacaoId, associada);
+                    })
                     .toList();
             itens.saveAll(registrados);
             long validos = registrados.stream()

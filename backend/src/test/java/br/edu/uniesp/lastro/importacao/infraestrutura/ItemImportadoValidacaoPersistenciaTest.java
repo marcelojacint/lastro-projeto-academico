@@ -47,7 +47,7 @@ class ItemImportadoValidacaoPersistenciaTest {
                 3, "1078 KG", "1078", null, "KG", ModalidadePreco.FARDO, null, BigDecimal.ZERO, List.of());
 
         itens.saveAndFlush(ItemImportado.registrarValidando(
-                importacaoId, semPrecoNemDescricao, LayoutPdf.TABELA_REFERENCIA, null));
+                importacaoId, semPrecoNemDescricao, LayoutPdf.TABELA_REFERENCIA, null, false));
 
         ItemImportado gravado =
                 itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(importacaoId).getFirst();
@@ -77,7 +77,8 @@ class ItemImportadoValidacaoPersistenciaTest {
                 new BigDecimal("32"),
                 List.of());
 
-        itens.saveAndFlush(ItemImportado.registrarValidando(importacaoId, correto, LayoutPdf.TABELA_REFERENCIA, null));
+        itens.saveAndFlush(
+                ItemImportado.registrarValidando(importacaoId, correto, LayoutPdf.TABELA_REFERENCIA, null, false));
 
         ItemImportado gravado =
                 itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(importacaoId).getFirst();
