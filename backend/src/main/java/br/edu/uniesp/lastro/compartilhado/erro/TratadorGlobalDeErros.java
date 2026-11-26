@@ -14,6 +14,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import tools.jackson.core.JacksonException;
 
@@ -39,6 +41,14 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, excecao.getMessage(), List.of());
     }
 
+    @ExceptionHandler(MultipartException.class)
+    ProblemDetail tratarMultipartInvalido(MultipartException excecao) {
+        return problema(
+                HttpStatus.BAD_REQUEST,
+                "Envio de arquivo inválido",
+                List.of(new ErroCampo("arquivo", "Envie o arquivo como multipart/form-data")));
+    }
+
     @ExceptionHandler(Exception.class)
     ProblemDetail tratarErroInesperado(Exception excecao) {
         LOG.error("Erro inesperado ao processar a requisição", excecao);
@@ -51,6 +61,14 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         ErroCampo erro = new ErroCampo(campoComValorInvalido(excecao), "Valor em formato inválido");
         return ResponseEntity.badRequest()
                 .body(problema(HttpStatus.BAD_REQUEST, "Corpo da requisição inválido", List.of(erro)));
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException excecao, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ErroCampo erro = new ErroCampo("arquivo", "O arquivo excede o tamanho máximo permitido");
+        return ResponseEntity.badRequest()
+                .body(problema(HttpStatus.BAD_REQUEST, "Arquivo muito grande", List.of(erro)));
     }
 
     @Override

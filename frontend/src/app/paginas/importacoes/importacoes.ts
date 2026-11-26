@@ -1,7 +1,51 @@
-import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
+import { StatusImportacaoComponente } from '../../componentes/status-importacao/status-importacao';
+import { AcaoImportacao, Importacao, acaoDaImportacao } from '../../modelos/importacao';
+import { ImportacaoService } from '../../servicos/importacao-service';
 
 @Component({
   selector: 'app-importacoes-pagina',
-  template: `<h1>Importações</h1>`,
+  imports: [
+    DatePipe,
+    RouterLink,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    StatusImportacaoComponente,
+  ],
+  templateUrl: './importacoes.html',
+  styleUrl: './importacoes.scss',
 })
-export class ImportacoesPagina {}
+export class ImportacoesPagina implements OnInit {
+  private readonly importacaoService = inject(ImportacaoService);
+
+  protected readonly colunas = [
+    'recebidaEm',
+    'fornecedor',
+    'arquivo',
+    'totalItens',
+    'status',
+    'acao',
+  ];
+  protected readonly importacoes = signal<Importacao[]>([]);
+  protected readonly carregando = signal(true);
+
+  ngOnInit(): void {
+    this.importacaoService.listar().subscribe({
+      next: (importacoes) => {
+        this.importacoes.set(importacoes);
+        this.carregando.set(false);
+      },
+      error: () => this.carregando.set(false),
+    });
+  }
+
+  protected acao(importacao: Importacao): AcaoImportacao | null {
+    return acaoDaImportacao(importacao);
+  }
+}

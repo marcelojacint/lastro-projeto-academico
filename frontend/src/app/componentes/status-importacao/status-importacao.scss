@@ -1,0 +1,30 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: var(--mat-sys-label-large);
+  white-space: nowrap;
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.tom-neutro {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.tom-andamento,
+.tom-sucesso {
+  color: var(--mat-sys-primary);
+}
+
+.tom-atencao {
+  color: var(--mat-sys-tertiary);
+}
+
+.tom-erro {
+  color: var(--mat-sys-error);
+}
