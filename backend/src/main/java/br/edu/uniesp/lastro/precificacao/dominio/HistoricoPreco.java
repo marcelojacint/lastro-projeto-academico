@@ -1,5 +1,7 @@
 package br.edu.uniesp.lastro.precificacao.dominio;
 
+import br.edu.uniesp.lastro.importacao.dominio.ItemImportado;
+import br.edu.uniesp.lastro.importacao.dominio.SituacaoItem;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +36,21 @@ public class HistoricoPreco {
     private Instant registradoEm;
 
     protected HistoricoPreco() {}
+
+    public static HistoricoPreco doItem(ItemImportado item, Instant agora) {
+        boolean podeEntrar = item.getSituacao() == SituacaoItem.VALIDO
+                && item.getApresentacaoId() != null
+                && item.getPreco() != null
+                && item.getPreco().signum() > 0;
+        if (!podeEntrar) {
+            throw new IllegalArgumentException(
+                    "Só item VALIDO, associado e com preço maior que zero entra no histórico; item da linha "
+                            + item.getNumeroLinha()
+                            + " está "
+                            + item.getSituacao());
+        }
+        return registrar(item.getApresentacaoId(), item.getImportacaoId(), item.getPreco(), agora);
+    }
 
     public static HistoricoPreco registrar(Long apresentacaoId, UUID importacaoId, BigDecimal preco, Instant agora) {
         HistoricoPreco historico = new HistoricoPreco();
