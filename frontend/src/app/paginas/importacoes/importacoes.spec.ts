@@ -111,4 +111,11 @@ describe('ImportacoesPagina', () => {
     const botao = elemento().querySelector('a[href="/importacoes/nova"]');
     expect(botao?.textContent).toContain('Enviar PDF');
   });
+  it('deve mostrar o motivo quando a importacao falhou', async () => {
+    await responder([
+      importacao('falha', 'FALHOU', { motivoFalha: 'LAYOUT_NAO_RECONHECIDO', totalItens: 0 }),
+    ]);
+
+    expect(linhas()[0].textContent).toContain('Layout do PDF não reconhecido');
+  });
 });
