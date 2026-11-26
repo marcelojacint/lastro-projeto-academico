@@ -55,7 +55,7 @@ public final class ValidacaoItem {
     }
 
     private void adicionar(ErroItem erro) {
-        adicionar(new MensagemErro(erro.name(), erro.getMensagem()));
+        adicionar(erro.paraMensagem());
     }
 
     private void adicionar(MensagemErro erro) {

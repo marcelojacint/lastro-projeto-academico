@@ -81,9 +81,10 @@ public class ItemImportado {
         return importado;
     }
 
-    public static ItemImportado registrarValidando(UUID importacaoId, ItemExtraido item, LayoutPdf layout) {
+    public static ItemImportado registrarValidando(
+            UUID importacaoId, ItemExtraido item, LayoutPdf layout, Long apresentacaoId) {
         ResultadoValidacaoItem resultado = ValidacaoItem.validar(item, layout);
-        return registrar(importacaoId, item, resultado.situacao(), resultado.erros(), null);
+        return registrar(importacaoId, item, resultado.situacao(), resultado.erros(), apresentacaoId);
     }
 
     public Long getId() {

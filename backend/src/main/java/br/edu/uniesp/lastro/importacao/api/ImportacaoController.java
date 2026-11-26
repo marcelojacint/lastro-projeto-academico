@@ -1,12 +1,17 @@
 package br.edu.uniesp.lastro.importacao.api;
 
+import br.edu.uniesp.lastro.compartilhado.erro.ErroCampo;
+import br.edu.uniesp.lastro.compartilhado.erro.ProcessamentoFalhouException;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoComFornecedor;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoService;
 import br.edu.uniesp.lastro.importacao.dominio.FiltroImportacao;
+import br.edu.uniesp.lastro.importacao.dominio.Importacao;
+import br.edu.uniesp.lastro.importacao.dominio.MotivoFalha;
 import br.edu.uniesp.lastro.importacao.dominio.StatusImportacao;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +39,14 @@ public class ImportacaoController {
                 fornecedorId,
                 arquivo == null ? null : arquivo.getOriginalFilename(),
                 arquivo == null ? null : arquivo.getBytes());
+        Importacao importacao = resultado.importacao();
+        if (importacao.getStatus() == StatusImportacao.FALHOU) {
+            MotivoFalha motivo = importacao.getMotivoFalha();
+            throw new ProcessamentoFalhouException(
+                    "A importação foi registrada, mas o PDF não pôde ser lido",
+                    new ErroCampo("arquivo", motivo.getMensagem()),
+                    Map.of("importacaoId", importacao.getId(), "motivoFalha", motivo));
+        }
         return ResponseEntity.created(
                         URI.create("/api/importacoes/" + resultado.importacao().getId()))
                 .body(ImportacaoResposta.de(resultado));

@@ -5,7 +5,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { StatusImportacaoComponente } from '../../componentes/status-importacao/status-importacao';
-import { AcaoImportacao, Importacao, acaoDaImportacao } from '../../modelos/importacao';
+import {
+  AcaoImportacao,
+  Importacao,
+  MOTIVOS_FALHA,
+  MotivoFalha,
+  acaoDaImportacao,
+} from '../../modelos/importacao';
 import { ImportacaoService } from '../../servicos/importacao-service';
 
 @Component({
@@ -43,6 +49,10 @@ export class ImportacoesPagina implements OnInit {
       },
       error: () => this.carregando.set(false),
     });
+  }
+
+  protected motivo(motivoFalha: MotivoFalha): string {
+    return MOTIVOS_FALHA[motivoFalha];
   }
 
   protected acao(importacao: Importacao): AcaoImportacao | null {

@@ -18,6 +18,8 @@
       <dd>{{ importacao.fornecedorNome }}</dd>
       <dt>Arquivo</dt>
       <dd>{{ importacao.nomeArquivo }} · {{ formatarTamanho(importacao.tamanhoBytes) }}</dd>
+      <dt>Itens lidos</dt>
+      <dd>{{ importacao.totalItens }}</dd>
       <dt>Status</dt>
       <dd><app-status-importacao [status]="importacao.status" /></dd>
     </dl>
@@ -87,6 +89,12 @@
             <p id="erro-arquivo" class="erro" role="alert">
               <mat-icon aria-hidden="true">error</mat-icon>
               {{ erroArquivo() }}
+            </p>
+          }
+          @if (falhaRegistrada()) {
+            <p class="ajuda">
+              A tentativa ficou registrada como falha na
+              <a routerLink="/importacoes">lista de importações</a>.
             </p>
           }
         </div>

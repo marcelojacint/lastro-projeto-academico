@@ -189,4 +189,58 @@ describe('ImportacaoNovaPagina', () => {
     expect(erroDoArquivo()).toBe('O arquivo deve ser um PDF');
     expect(elemento().querySelector('.id')).toBeNull();
   });
+  it('deve mostrar quantos itens foram lidos na confirmacao', async () => {
+    await carregarFornecedores([fornecedor(1, 'Natural Sul', true)]);
+    await escolherFornecedor('Natural Sul');
+    await escolherArquivo('Fornecedor_1.pdf', 2048);
+
+    await enviar();
+    envio().flush({
+      id: '4f1c2a8e-0b7d-4c55-9a52-3f6b9d1e2a10',
+      fornecedorId: 1,
+      fornecedorNome: 'Natural Sul',
+      nomeArquivo: 'Fornecedor_1.pdf',
+      tamanhoBytes: 2048,
+      hashSha256: 'c'.repeat(64),
+      recebidaEm: '2026-11-26T13:05:00Z',
+      concluidaEm: null,
+      status: 'EM_CONFERENCIA',
+      totalItens: 4,
+      itensValidos: 0,
+      itensPendentes: 4,
+      motivoFalha: null,
+    });
+    await fixture.whenStable();
+
+    const dados = Array.from(elemento().querySelectorAll('dt')).map((rotulo) => [
+      rotulo.textContent?.trim(),
+      rotulo.nextElementSibling?.textContent?.trim(),
+    ]);
+    expect(dados).toContainEqual(['Itens lidos', '4']);
+    expect(elemento().textContent).toContain('Em conferência');
+  });
+
+  it('deve avisar que a leitura falhou e ficou registrada na lista', async () => {
+    await carregarFornecedores([fornecedor(1, 'Natural Sul', true)]);
+    await escolherFornecedor('Natural Sul');
+    await escolherArquivo('Fornecedor_2.pdf', 2048);
+
+    await enviar();
+    envio().flush(
+      {
+        status: 422,
+        importacaoId: '9b2d6c1e-3f4a-4b5c-8d7e-0a1b2c3d4e5f',
+        motivoFalha: 'LAYOUT_NAO_RECONHECIDO',
+        erros: [
+          { campo: 'arquivo', mensagem: 'O PDF não segue o layout cadastrado para o fornecedor' },
+        ],
+      },
+      { status: 422, statusText: 'Unprocessable Content' },
+    );
+    await fixture.whenStable();
+
+    expect(erroDoArquivo()).toBe('O PDF não segue o layout cadastrado para o fornecedor');
+    expect(elemento().textContent).toContain('A tentativa ficou registrada como falha');
+    expect(elemento().querySelector('a[href="/importacoes"]')).not.toBeNull();
+  });
 });

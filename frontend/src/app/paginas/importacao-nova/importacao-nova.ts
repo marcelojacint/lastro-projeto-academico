@@ -43,6 +43,7 @@ export class ImportacaoNovaPagina implements OnInit {
   protected readonly carregando = signal(true);
   protected readonly arquivo = signal<File | null>(null);
   protected readonly erroArquivo = signal<string | null>(null);
+  protected readonly falhaRegistrada = signal(false);
   protected readonly enviando = signal(false);
   protected readonly recebida = signal<Importacao | null>(null);
 
@@ -77,6 +78,7 @@ export class ImportacaoNovaPagina implements OnInit {
     }
     this.arquivo.set(escolhido);
     this.erroArquivo.set(erroDoArquivoPdf(escolhido));
+    this.falhaRegistrada.set(false);
   }
 
   protected enviar(): void {
@@ -105,6 +107,7 @@ export class ImportacaoNovaPagina implements OnInit {
     this.recebida.set(null);
     this.arquivo.set(null);
     this.erroArquivo.set(null);
+    this.falhaRegistrada.set(false);
   }
 
   private marcarErrosDaApi(falha: unknown): void {
@@ -112,6 +115,7 @@ export class ImportacaoNovaPagina implements OnInit {
       return;
     }
     const corpo = falha.error as ErroApi | null;
+    this.falhaRegistrada.set(Boolean(corpo?.importacaoId));
     for (const item of corpo?.erros ?? []) {
       if (item.campo === 'arquivo') {
         this.erroArquivo.set(item.mensagem);

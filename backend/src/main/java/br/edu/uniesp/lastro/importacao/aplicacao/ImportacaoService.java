@@ -22,10 +22,13 @@ public class ImportacaoService {
 
     private final ImportacaoRepository repository;
     private final FornecedorService fornecedorService;
+    private final LeituraImportacao leitura;
 
-    public ImportacaoService(ImportacaoRepository repository, FornecedorService fornecedorService) {
+    public ImportacaoService(
+            ImportacaoRepository repository, FornecedorService fornecedorService, LeituraImportacao leitura) {
         this.repository = repository;
         this.fornecedorService = fornecedorService;
+        this.leitura = leitura;
     }
 
     @Transactional
@@ -39,6 +42,7 @@ public class ImportacaoService {
                 solicitacao.hashSha256(),
                 solicitacao.tamanhoBytes(),
                 Instant.now()));
+        leitura.ler(importacao, fornecedor.getLayoutPdf(), conteudo);
         return new ImportacaoComFornecedor(importacao, fornecedor.getNome());
     }
 
