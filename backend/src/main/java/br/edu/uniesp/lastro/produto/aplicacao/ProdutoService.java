@@ -7,6 +7,7 @@ import br.edu.uniesp.lastro.compartilhado.erro.RecursoNaoEncontradoException;
 import br.edu.uniesp.lastro.produto.dominio.DadosProduto;
 import br.edu.uniesp.lastro.produto.dominio.FiltroProduto;
 import br.edu.uniesp.lastro.produto.dominio.Produto;
+import br.edu.uniesp.lastro.produto.dominio.StatusProduto;
 import br.edu.uniesp.lastro.produto.infraestrutura.ProdutoEspecificacoes;
 import br.edu.uniesp.lastro.produto.infraestrutura.ProdutoRepository;
 import java.time.Instant;
@@ -56,6 +57,11 @@ public class ProdutoService {
         }
         return repository.findAll(
                 ProdutoEspecificacoes.filtradoPor(filtro), PageRequest.of(pagina, TAMANHO_PAGINA, ORDENACAO_POR_NOME));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Produto> listarAtivos() {
+        return repository.findByStatus(StatusProduto.ATIVO);
     }
 
     @Transactional
