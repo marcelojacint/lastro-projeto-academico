@@ -36,6 +36,14 @@ public class TratadorGlobalDeErros extends ResponseEntityExceptionHandler {
         return problema(HttpStatus.CONFLICT, excecao.getMessage(), List.of(excecao.getErro()));
     }
 
+    @ExceptionHandler(ProcessamentoFalhouException.class)
+    ProblemDetail tratarProcessamentoFalhou(ProcessamentoFalhouException excecao) {
+        ProblemDetail problema =
+                problema(HttpStatus.UNPROCESSABLE_CONTENT, excecao.getMessage(), List.of(excecao.getErro()));
+        excecao.getPropriedades().forEach(problema::setProperty);
+        return problema;
+    }
+
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     ProblemDetail tratarNaoEncontrado(RecursoNaoEncontradoException excecao) {
         return problema(HttpStatus.NOT_FOUND, excecao.getMessage(), List.of());
