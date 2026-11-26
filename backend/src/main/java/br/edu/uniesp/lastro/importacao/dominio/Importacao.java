@@ -67,6 +67,19 @@ public class Importacao {
         return importacao;
     }
 
+    public void iniciarConferencia(int totalItens, int itensValidos) {
+        this.status = StatusImportacao.EM_CONFERENCIA;
+        this.totalItens = totalItens;
+        this.itensValidos = itensValidos;
+        this.itensPendentes = totalItens - itensValidos;
+        this.motivoFalha = null;
+    }
+
+    public void falhar(MotivoFalha motivo) {
+        this.status = StatusImportacao.FALHOU;
+        this.motivoFalha = motivo;
+    }
+
     public UUID getId() {
         return id;
     }
