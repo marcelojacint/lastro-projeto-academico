@@ -23,6 +23,14 @@ export const STATUS_IMPORTACAO: Record<StatusImportacao, ApresentacaoStatus> = {
   DESCARTADA: { rotulo: 'Descartada', icone: 'block', tom: 'neutro' },
 };
 
+export type MotivoFalha = 'LAYOUT_NAO_RECONHECIDO' | 'PDF_ILEGIVEL' | 'ERRO_INTERNO';
+
+export const MOTIVOS_FALHA: Record<MotivoFalha, string> = {
+  LAYOUT_NAO_RECONHECIDO: 'Layout do PDF não reconhecido',
+  PDF_ILEGIVEL: 'PDF ilegível',
+  ERRO_INTERNO: 'Erro interno na leitura',
+};
+
 export interface Importacao {
   id: string;
   fornecedorId: number;
@@ -36,7 +44,7 @@ export interface Importacao {
   totalItens: number;
   itensValidos: number;
   itensPendentes: number;
-  motivoFalha: string | null;
+  motivoFalha: MotivoFalha | null;
 }
 
 export interface AcaoImportacao {

@@ -7,4 +7,5 @@ export interface ErroApi {
   status: number;
   detail?: string;
   erros?: ErroCampo[];
+  importacaoId?: string;
 }
