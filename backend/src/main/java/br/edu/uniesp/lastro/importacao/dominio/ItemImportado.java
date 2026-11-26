@@ -1,6 +1,7 @@
 package br.edu.uniesp.lastro.importacao.dominio;
 
 import br.edu.uniesp.lastro.compartilhado.notificacao.MensagemErro;
+import br.edu.uniesp.lastro.fornecedor.dominio.LayoutPdf;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -78,6 +79,11 @@ public class ItemImportado {
         importado.erros = new ArrayList<>(erros);
         importado.apresentacaoId = apresentacaoId;
         return importado;
+    }
+
+    public static ItemImportado registrarValidando(UUID importacaoId, ItemExtraido item, LayoutPdf layout) {
+        ResultadoValidacaoItem resultado = ValidacaoItem.validar(item, layout);
+        return registrar(importacaoId, item, resultado.situacao(), resultado.erros(), null);
     }
 
     public Long getId() {

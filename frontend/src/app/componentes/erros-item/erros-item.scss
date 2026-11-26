@@ -1,0 +1,36 @@
+.erros {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.erro {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-error);
+
+  mat-icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}
+
+.sem-erros {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
