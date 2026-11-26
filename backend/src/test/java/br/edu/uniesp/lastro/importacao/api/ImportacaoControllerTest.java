@@ -14,11 +14,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import br.edu.uniesp.lastro.TestcontainersConfiguration;
+import br.edu.uniesp.lastro.importacao.PdfDeTeste;
 import com.jayway.jsonpath.JsonPath;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,8 +54,8 @@ class ImportacaoControllerTest {
                 .andExpect(jsonPath("$.tamanhoBytes").value(conteudo.length))
                 .andExpect(jsonPath("$.hashSha256").value(sha256(conteudo)))
                 .andExpect(jsonPath("$.recebidaEm").isNotEmpty())
-                .andExpect(jsonPath("$.status").value("RECEBIDA"))
-                .andExpect(jsonPath("$.totalItens").value(0));
+                .andExpect(jsonPath("$.status").value("EM_CONFERENCIA"))
+                .andExpect(jsonPath("$.totalItens").value(2));
     }
 
     @Test
@@ -124,7 +124,7 @@ class ImportacaoControllerTest {
 
         mockMvc.perform(get("/api/importacoes")
                         .param("fornecedorId", fornecedorId.toString())
-                        .param("status", "RECEBIDA"))
+                        .param("status", "EM_CONFERENCIA"))
                 .andExpect(jsonPath("$", hasSize(1)));
         mockMvc.perform(get("/api/importacoes")
                         .param("fornecedorId", fornecedorId.toString())
@@ -149,7 +149,7 @@ class ImportacaoControllerTest {
     }
 
     private static byte[] pdfUnico() {
-        return ("%PDF-1.4\n" + UUID.randomUUID()).getBytes(StandardCharsets.US_ASCII);
+        return PdfDeTeste.tabelaReferenciaUnica();
     }
 
     private static String idDe(ResultActions resultado) throws Exception {
