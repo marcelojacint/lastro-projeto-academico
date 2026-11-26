@@ -238,7 +238,7 @@ Descrição: Como dupla, queremos o esquema e as interfaces compartilhadas defin
 Critérios de aceitação:
 - [ ] Migrações de `importacao`, `apresentacao_fornecedor`, `item_importado` e `historico_preco` com as restrições do PRD e das decisões D04 e D05
 - [ ] Enums `StatusImportacao`, `SituacaoItem`, `ModalidadePreco` (D02), `LayoutPdf`, `MotivoFalha`
-- [ ] `ItemExtraido` (record), interface `LeitorPdf` e `Notificacao` em `compartilhado`
+- [ ] `ItemExtraido` (record) e interface `LeitorPdf` em `importacao.dominio`; `Notificacao` em `compartilhado`
 - [ ] Interface de consulta do último preço válido por apresentação
 - [ ] Nenhuma regra implementada além das estruturas; aprovado pelos dois
 
