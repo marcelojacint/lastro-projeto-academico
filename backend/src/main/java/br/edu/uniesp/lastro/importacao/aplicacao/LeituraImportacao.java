@@ -6,14 +6,12 @@ import br.edu.uniesp.lastro.importacao.dominio.FalhaLeituraException;
 import br.edu.uniesp.lastro.importacao.dominio.Importacao;
 import br.edu.uniesp.lastro.importacao.dominio.ItemExtraido;
 import br.edu.uniesp.lastro.importacao.dominio.ItemImportado;
-import br.edu.uniesp.lastro.importacao.dominio.LeitorPdf;
 import br.edu.uniesp.lastro.importacao.dominio.LeitoresPdf;
 import br.edu.uniesp.lastro.importacao.dominio.SituacaoItem;
 import br.edu.uniesp.lastro.importacao.infraestrutura.ExtratorTextoPdf;
 import br.edu.uniesp.lastro.importacao.infraestrutura.ItemImportadoRepository;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,12 +34,8 @@ public class LeituraImportacao {
     }
 
     public void ler(Importacao importacao, LayoutPdf layout, byte[] conteudo) {
-        Optional<LeitorPdf> leitor = LeitoresPdf.para(layout);
-        if (leitor.isEmpty()) {
-            return;
-        }
         try {
-            List<ItemExtraido> extraidos = leitor.get().ler(extrator.extrairLinhas(conteudo));
+            List<ItemExtraido> extraidos = LeitoresPdf.para(layout).ler(extrator.extrairLinhas(conteudo));
             Instant agora = Instant.now();
             CatalogoProdutos catalogo = associacao.carregarCatalogo();
             List<ItemImportado> registrados = extraidos.stream()
