@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Importacao } from '../modelos/importacao';
+import { CorrecaoItem, ImportacaoDetalhe } from '../modelos/item-importado';
 
 @Injectable({ providedIn: 'root' })
 export class ImportacaoService {
@@ -17,5 +18,13 @@ export class ImportacaoService {
 
   listar(): Observable<Importacao[]> {
     return this.http.get<Importacao[]>(this.url);
+  }
+
+  detalhar(id: string): Observable<ImportacaoDetalhe> {
+    return this.http.get<ImportacaoDetalhe>(`${this.url}/${id}`);
+  }
+
+  corrigirItem(id: string, itemId: number, correcao: CorrecaoItem): Observable<ImportacaoDetalhe> {
+    return this.http.put<ImportacaoDetalhe>(`${this.url}/${id}/itens/${itemId}`, correcao);
   }
 }
