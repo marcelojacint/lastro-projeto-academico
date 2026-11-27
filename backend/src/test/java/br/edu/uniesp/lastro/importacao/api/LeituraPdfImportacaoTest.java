@@ -185,12 +185,57 @@ class LeituraPdfImportacaoTest {
     }
 
     @Test
-    void deveDeixarRecebidaAImportacaoDeLayoutAindaSemLeitor() throws Exception {
+    void deveLerOPdfDeAtacadoEVarejoComADescricaoComoIdentificador() throws Exception {
         Integer fornecedorId = cadastrarFornecedor("ATACADO_VAREJO");
 
-        enviar(fornecedorId, "Fornecedor_2.pdf", PdfDeTeste.recurso("Fornecedor_2.pdf"))
+        String id = idDe(enviar(fornecedorId, "Fornecedor_2.pdf", PdfDeTeste.recurso("Fornecedor_2.pdf"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("RECEBIDA"));
+                .andExpect(jsonPath("$.status").value("EM_CONFERENCIA"))
+                .andExpect(jsonPath("$.totalItens").value(4)));
+
+        List<ItemImportado> lidos = itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(UUID.fromString(id));
+        assertThat(lidos)
+                .extracting(ItemImportado::getDescricao, ItemImportado::getModalidadePreco, ItemImportado::getPreco)
+                .containsExactly(
+                        tuple("ACUCAR DE COCO", ModalidadePreco.ATACADO, new BigDecimal("32.00")),
+                        tuple("ACUCAR DE COCO", ModalidadePreco.VAREJO, new BigDecimal("32.00")),
+                        tuple("DOCANTE STEVIA COLOR ANDINA 40G", ModalidadePreco.ATACADO, new BigDecimal("78.00")),
+                        tuple("DOCANTE STEVIA COLOR ANDINA 40G", ModalidadePreco.VAREJO, new BigDecimal("78.00")));
+        assertThat(lidos).allSatisfy(item -> {
+            assertThat(item.getReferencia()).isNull();
+            assertThat(item.getUnidade()).isNull();
+            assertThat(item.getApresentacaoId()).isNotNull();
+        });
+        assertThat(jdbc.queryForList(
+                        "SELECT DISTINCT chave_item FROM apresentacao_fornecedor WHERE fornecedor_id = ? ORDER BY 1",
+                        String.class,
+                        fornecedorId))
+                .containsExactly("ACUCAR DE COCO", "DOCANTE STEVIA COLOR ANDINA 40G");
+    }
+
+    @Test
+    void deveReaproveitarApresentacoesSemUnidadeNaProximaImportacao() throws Exception {
+        Integer fornecedorId = cadastrarFornecedor("ATACADO_VAREJO");
+        enviar(fornecedorId, "Fornecedor_2.pdf", PdfDeTeste.recurso("Fornecedor_2.pdf"))
+                .andExpect(status().isCreated());
+
+        enviar(
+                        fornecedorId,
+                        "Fornecedor_2_v2.pdf",
+                        PdfDeTeste.comLinhas("Descrição ATACADO VAREJO", "Açúcar de coco 35 33"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.totalItens").value(2));
+
+        assertThat(apresentacoesDo(fornecedorId)).isEqualTo(4);
+    }
+
+    @Test
+    void deveRegistrarFalhaQuandoFornecedorDeAtacadoEVarejoEnviaPdfComReferencia() throws Exception {
+        Integer fornecedorId = cadastrarFornecedor("ATACADO_VAREJO");
+
+        enviar(fornecedorId, "Fornecedor_1.pdf", PdfDeTeste.recurso("Fornecedor_1.pdf"))
+                .andExpect(status().isUnprocessableContent())
+                .andExpect(jsonPath("$.motivoFalha").value("LAYOUT_NAO_RECONHECIDO"));
     }
 
     private ResultActions enviar(Integer fornecedorId, String nome, byte[] conteudo) throws Exception {
