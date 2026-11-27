@@ -2,8 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { DadosConfirmacao } from '../../componentes/confirmacao/confirmacao';
 import { Importacao, StatusImportacao } from '../../modelos/importacao';
 import { ImportacaoDetalhe, ItemConferencia } from '../../modelos/item-importado';
 import { ConferenciaPagina } from './conferencia';
@@ -12,6 +13,7 @@ describe('ConferenciaPagina', () => {
   let fixture: ComponentFixture<ConferenciaPagina>;
   let http: HttpTestingController;
   let resultadoDoDialogo: unknown;
+  let dadosDoDialogo: unknown[];
 
   function importacao(status: StatusImportacao, dados: Partial<Importacao> = {}): Importacao {
     return {
@@ -77,6 +79,7 @@ describe('ConferenciaPagina', () => {
 
   beforeEach(async () => {
     resultadoDoDialogo = undefined;
+    dadosDoDialogo = [];
     await TestBed.configureTestingModule({
       imports: [ConferenciaPagina],
       providers: [
@@ -85,7 +88,12 @@ describe('ConferenciaPagina', () => {
         provideRouter([]),
         {
           provide: MatDialog,
-          useValue: { open: () => ({ afterClosed: () => of(resultadoDoDialogo) }) },
+          useValue: {
+            open: (_componente: unknown, configuracao: { data: unknown }) => {
+              dadosDoDialogo.push(configuracao.data);
+              return { afterClosed: () => of(resultadoDoDialogo) };
+            },
+          },
         },
       ],
     }).compileComponents();
@@ -108,6 +116,12 @@ describe('ConferenciaPagina', () => {
 
   function linhas(): HTMLElement[] {
     return Array.from(elemento().querySelectorAll<HTMLElement>('tr.mat-mdc-row'));
+  }
+
+  function botaoFinal(rotulo: string): HTMLButtonElement | undefined {
+    return Array.from(elemento().querySelectorAll<HTMLButtonElement>('.acoes-finais button')).find(
+      (botao) => botao.textContent?.includes(rotulo),
+    );
   }
 
   function contadores(): string[][] {
@@ -257,5 +271,97 @@ describe('ConferenciaPagina', () => {
     await fixture.whenStable();
 
     expect(elemento().querySelector('.oferta')).toBeNull();
+  });
+
+  it('deve concluir depois da confirmacao e levar para a comparacao', async () => {
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens });
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    resultadoDoDialogo = true;
+
+    botaoFinal('Concluir')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/importacoes/imp-1/concluir' })
+      .flush(importacao('CONCLUIDA_COM_PENDENCIAS', { concluidaEm: '2026-11-27T10:00:00Z' }));
+    await fixture.whenStable();
+
+    const confirmacao = dadosDoDialogo[0] as DadosConfirmacao;
+    expect(confirmacao.titulo).toBe('Concluir importação?');
+    expect(confirmacao.mensagens).toEqual([
+      '1 preço válido vai para o histórico. Os preços já gravados não mudam.',
+      '2 itens pendentes ou inválidos ficam de fora, e a importação será concluída com pendências.',
+    ]);
+    expect(navegar).toHaveBeenCalledWith(['/importacoes', 'imp-1', 'comparacao']);
+  });
+
+  it('deve avisar so dos precos validos quando nao sobra pendencia', async () => {
+    await carregar({
+      importacao: importacao('EM_CONFERENCIA', {
+        totalItens: 2,
+        itensValidos: 2,
+        itensPendentes: 0,
+      }),
+      itens: [itens[0], { ...itens[1], situacao: 'VALIDO', preco: 30, erros: [] }],
+    });
+    resultadoDoDialogo = false;
+
+    botaoFinal('Concluir')!.click();
+    await fixture.whenStable();
+
+    expect((dadosDoDialogo[0] as DadosConfirmacao).mensagens).toEqual([
+      '2 preços válidos vão para o histórico. Os preços já gravados não mudam.',
+    ]);
+  });
+
+  it('nao deve concluir nem descartar quando o usuario cancela', async () => {
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens });
+    resultadoDoDialogo = false;
+
+    botaoFinal('Concluir')!.click();
+    botaoFinal('Descartar')!.click();
+    await fixture.whenStable();
+
+    expect(dadosDoDialogo).toHaveLength(2);
+    http.expectNone({ method: 'POST' });
+    expect(botaoFinal('Concluir')).toBeDefined();
+  });
+
+  it('deve descartar depois da confirmacao e mostrar a importacao descartada', async () => {
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens });
+    resultadoDoDialogo = true;
+
+    botaoFinal('Descartar')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/importacoes/imp-1/descartar' })
+      .flush(importacao('DESCARTADA'));
+    await fixture.whenStable();
+
+    expect((dadosDoDialogo[0] as DadosConfirmacao).confirmar).toBe('Descartar');
+    expect(elemento().querySelector('app-status-importacao')?.textContent).toContain('Descartada');
+    expect(elemento().querySelector('.acoes-finais')).toBeNull();
+    expect(elemento().querySelectorAll('td button')).toHaveLength(0);
+  });
+
+  it('deve manter os botoes quando a API recusa a conclusao', async () => {
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens });
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate');
+    resultadoDoDialogo = true;
+
+    botaoFinal('Concluir')!.click();
+    http.expectOne({ method: 'POST', url: '/api/importacoes/imp-1/concluir' }).flush(
+      {
+        erros: [{ campo: 'status', mensagem: 'Só dá para concluir uma importação em conferência' }],
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await fixture.whenStable();
+
+    expect(navegar).not.toHaveBeenCalled();
+    expect(botaoFinal('Concluir')!.disabled).toBe(false);
+  });
+
+  it('deve esconder concluir e descartar fora de conferencia', async () => {
+    await carregar({ importacao: importacao('CONCLUIDA'), itens });
+
+    expect(elemento().querySelector('.acoes-finais')).toBeNull();
   });
 });

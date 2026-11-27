@@ -14,6 +14,14 @@
   }
 }
 
+.acoes-finais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .origem {
   margin: 0;
   color: var(--mat-sys-on-surface-variant);

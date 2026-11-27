@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { ConferenciaPagina } from './paginas/conferencia/conferencia';
 import { FornecedoresPagina } from './paginas/fornecedores/fornecedores';
 import { HistoricoPagina } from './paginas/historico/historico';
 import { ImportacaoNovaPagina } from './paginas/importacao-nova/importacao-nova';
@@ -21,8 +20,15 @@ export const routes: Routes = [
   },
   {
     path: 'importacoes/:id/conferencia',
-    component: ConferenciaPagina,
+    loadComponent: () =>
+      import('./paginas/conferencia/conferencia').then((modulo) => modulo.ConferenciaPagina),
     title: 'Conferência · Lastro',
+  },
+  {
+    path: 'importacoes/:id/comparacao',
+    loadComponent: () =>
+      import('./paginas/comparacao/comparacao').then((modulo) => modulo.ComparacaoPagina),
+    title: 'Comparação · Lastro',
   },
   { path: 'historico', component: HistoricoPagina, title: 'Histórico · Lastro' },
   { path: '**', redirectTo: 'produtos' },

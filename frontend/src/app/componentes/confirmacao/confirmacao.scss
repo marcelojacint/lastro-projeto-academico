@@ -1,0 +1,11 @@
+.conteudo {
+  max-width: min(480px, 80vw);
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
