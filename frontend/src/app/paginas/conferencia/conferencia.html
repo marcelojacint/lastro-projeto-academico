@@ -17,6 +17,19 @@
     <app-status-importacao [status]="atual.importacao.status" />
   </div>
 
+  @if (emConferencia()) {
+    <div class="acoes-finais">
+      <button mat-button type="button" [disabled]="finalizando()" (click)="descartar()">
+        <mat-icon aria-hidden="true">block</mat-icon>
+        Descartar
+      </button>
+      <button mat-flat-button type="button" [disabled]="finalizando()" (click)="concluir()">
+        <mat-icon aria-hidden="true">done_all</mat-icon>
+        Concluir
+      </button>
+    </div>
+  }
+
   <dl class="contadores">
     <div>
       <dt>Itens</dt>

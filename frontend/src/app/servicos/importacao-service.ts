@@ -33,4 +33,12 @@ export class ImportacaoService {
       produtoId,
     });
   }
+
+  concluir(id: string): Observable<Importacao> {
+    return this.http.post<Importacao>(`${this.url}/${id}/concluir`, null);
+  }
+
+  descartar(id: string): Observable<Importacao> {
+    return this.http.post<Importacao>(`${this.url}/${id}/descartar`, null);
+  }
 }

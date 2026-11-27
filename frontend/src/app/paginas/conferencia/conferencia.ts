@@ -5,8 +5,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { RouterLink } from '@angular/router';
-import { concatMap, from } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { Observable, concatMap, filter, from, switchMap } from 'rxjs';
 import {
   AssociacaoItemComponente,
   DadosAssociacaoItem,
@@ -17,10 +17,11 @@ import {
   CorrecaoItemComponente,
   DadosCorrecaoItem,
 } from '../../componentes/correcao-item/correcao-item';
+import { ConfirmacaoComponente, DadosConfirmacao } from '../../componentes/confirmacao/confirmacao';
 import { ErrosItemComponente } from '../../componentes/erros-item/erros-item';
 import { EtiquetaStatusComponente } from '../../componentes/etiqueta-status/etiqueta-status';
 import { StatusImportacaoComponente } from '../../componentes/status-importacao/status-importacao';
-import { ApresentacaoStatus } from '../../modelos/importacao';
+import { ApresentacaoStatus, Importacao } from '../../modelos/importacao';
 import {
   ImportacaoDetalhe,
   ItemConferencia,
@@ -65,6 +66,7 @@ interface OpcaoFiltro {
 export class ConferenciaPagina implements OnInit {
   private readonly importacaoService = inject(ImportacaoService);
   private readonly dialogo = inject(MatDialog);
+  private readonly router = inject(Router);
 
   readonly id = input.required<string>();
 
@@ -86,6 +88,7 @@ export class ConferenciaPagina implements OnInit {
   protected readonly filtro = signal<FiltroSituacao>('TODAS');
   protected readonly oferta = signal<OfertaMesmaLinha | null>(null);
   protected readonly associandoOferta = signal(false);
+  protected readonly finalizando = signal(false);
 
   protected readonly emConferencia = computed(
     () => this.detalhe()?.importacao.status === 'EM_CONFERENCIA',
@@ -207,5 +210,72 @@ export class ConferenciaPagina implements OnInit {
 
   protected recusarOferta(): void {
     this.oferta.set(null);
+  }
+
+  protected concluir(): void {
+    const importacao = this.detalhe()?.importacao;
+    if (!importacao) {
+      return;
+    }
+    const mensagens = [
+      `${this.quantidade(importacao.itensValidos, 'preço válido vai', 'preços válidos vão')} para o histórico. Os preços já gravados não mudam.`,
+    ];
+    if (importacao.itensPendentes > 0) {
+      mensagens.push(
+        `${this.quantidade(importacao.itensPendentes, 'item pendente ou inválido fica', 'itens pendentes ou inválidos ficam')} de fora, e a importação será concluída com pendências.`,
+      );
+    }
+    this.finalizar(
+      { titulo: 'Concluir importação?', mensagens, confirmar: 'Concluir' },
+      () => this.importacaoService.concluir(this.id()),
+      () => void this.router.navigate(['/importacoes', this.id(), 'comparacao']),
+    );
+  }
+
+  protected descartar(): void {
+    this.finalizar(
+      {
+        titulo: 'Descartar importação?',
+        mensagens: [
+          'Nenhum preço desta importação vai para o histórico.',
+          'A importação não poderá mais ser conferida nem concluída.',
+        ],
+        confirmar: 'Descartar',
+      },
+      () => this.importacaoService.descartar(this.id()),
+      (importacao) => this.detalhe.update((atual) => (atual ? { ...atual, importacao } : atual)),
+    );
+  }
+
+  private finalizar(
+    dados: DadosConfirmacao,
+    acao: () => Observable<Importacao>,
+    depois: (importacao: Importacao) => void,
+  ): void {
+    this.dialogo
+      .open<ConfirmacaoComponente, DadosConfirmacao, boolean>(ConfirmacaoComponente, {
+        data: dados,
+        restoreFocus: true,
+      })
+      .afterClosed()
+      .pipe(
+        filter((confirmado) => confirmado === true),
+        switchMap(() => {
+          this.finalizando.set(true);
+          return acao();
+        }),
+      )
+      .subscribe({
+        next: (importacao) => {
+          this.finalizando.set(false);
+          this.oferta.set(null);
+          depois(importacao);
+        },
+        error: () => this.finalizando.set(false),
+      });
+  }
+
+  private quantidade(valor: number, singular: string, plural: string): string {
+    return `${valor} ${valor === 1 ? singular : plural}`;
   }
 }
