@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>Corrigir item da linha {{ dados.item.numeroLinha }}</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="salvar()" novalidate>
+  <mat-dialog-content class="conteudo">
+    <dl class="origem">
+      <dt>Linha do PDF</dt>
+      <dd class="linha-original">{{ dados.item.linhaOriginal }}</dd>
+      <dt>Modalidade</dt>
+      <dd>{{ modalidade }}</dd>
+    </dl>
+
+    <div class="linha">
+      <mat-form-field class="curto">
+        <mat-label>Referência</mat-label>
+        <input matInput formControlName="referencia" cdkFocusInitial />
+        <mat-error>{{ mensagemErro('referencia') }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="curto">
+        <mat-label>Unidade</mat-label>
+        <input matInput formControlName="unidade" />
+        <mat-error>{{ mensagemErro('unidade') }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field>
+      <mat-label>Descrição</mat-label>
+      <input matInput formControlName="descricao" required />
+      <mat-error>{{ mensagemErro('descricao') }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Preço</mat-label>
+      <input
+        matInput
+        formControlName="preco"
+        inputmode="decimal"
+        placeholder="R$ 0,00"
+        required
+        (blur)="formatarPreco()"
+      />
+      <mat-error>{{ mensagemErro('preco') }}</mat-error>
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="salvando()">
+      {{ salvando() ? 'Salvando…' : 'Salvar' }}
+    </button>
+  </mat-dialog-actions>
+</form>

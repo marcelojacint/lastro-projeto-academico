@@ -1,5 +1,6 @@
 package br.edu.uniesp.lastro.importacao.dominio;
 
+import br.edu.uniesp.lastro.compartilhado.erro.ConflitoException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -73,6 +74,19 @@ public class Importacao {
         this.itensValidos = itensValidos;
         this.itensPendentes = totalItens - itensValidos;
         this.motivoFalha = null;
+    }
+
+    public void exigirEmConferencia() {
+        if (status != StatusImportacao.EM_CONFERENCIA) {
+            throw new ConflitoException("status", "Só dá para corrigir itens de uma importação em conferência");
+        }
+    }
+
+    public void atualizarContadores(int totalItens, int itensValidos) {
+        exigirEmConferencia();
+        this.totalItens = totalItens;
+        this.itensValidos = itensValidos;
+        this.itensPendentes = totalItens - itensValidos;
     }
 
     public void falhar(MotivoFalha motivo) {

@@ -1,0 +1,36 @@
+.conteudo {
+  display: flex;
+  flex-direction: column;
+  min-width: min(480px, 80vw);
+}
+
+.origem {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+  font: var(--mat-sys-body-small);
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.linha-original {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.linha {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .curto {
+    flex: 1 1 160px;
+  }
+}

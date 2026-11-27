@@ -11,7 +11,10 @@ import br.edu.uniesp.lastro.produto.dominio.StatusProduto;
 import br.edu.uniesp.lastro.produto.infraestrutura.ProdutoEspecificacoes;
 import br.edu.uniesp.lastro.produto.infraestrutura.ProdutoRepository;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -57,6 +60,11 @@ public class ProdutoService {
         }
         return repository.findAll(
                 ProdutoEspecificacoes.filtradoPor(filtro), PageRequest.of(pagina, TAMANHO_PAGINA, ORDENACAO_POR_NOME));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<Long, String> nomesPorId(Collection<Long> ids) {
+        return repository.findAllById(ids).stream().collect(Collectors.toMap(Produto::getId, Produto::getNome));
     }
 
     @Transactional(readOnly = true)

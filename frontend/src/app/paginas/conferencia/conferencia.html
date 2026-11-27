@@ -1,0 +1,150 @@
+@let atual = detalhe();
+
+<a mat-button routerLink="/importacoes" class="voltar">
+  <mat-icon aria-hidden="true">arrow_back</mat-icon>
+  Importações
+</a>
+
+@if (atual) {
+  <div class="cabecalho">
+    <div>
+      <h1>Conferência</h1>
+      <p class="origem">
+        {{ atual.importacao.fornecedorNome }} · {{ atual.importacao.nomeArquivo }} ·
+        {{ atual.importacao.recebidaEm | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+    </div>
+    <app-status-importacao [status]="atual.importacao.status" />
+  </div>
+
+  <dl class="contadores">
+    <div>
+      <dt>Itens</dt>
+      <dd>{{ atual.importacao.totalItens }}</dd>
+    </div>
+    <div>
+      <dt>Válidos</dt>
+      <dd>{{ atual.importacao.itensValidos }}</dd>
+    </div>
+    <div>
+      <dt>Pendentes</dt>
+      <dd>{{ atual.importacao.itensPendentes }}</dd>
+    </div>
+  </dl>
+
+  @if (!emConferencia()) {
+    <p class="aviso">Esta importação não está em conferência; os itens não podem ser corrigidos.</p>
+  }
+
+  <mat-chip-listbox
+    class="filtro"
+    aria-label="Filtrar itens por situação"
+    [value]="filtro()"
+    (change)="filtrar($event.value)"
+  >
+    @for (opcao of opcoesFiltro(); track opcao.valor) {
+      <mat-chip-option [value]="opcao.valor">
+        {{ opcao.rotulo }} ({{ opcao.quantidade }})
+      </mat-chip-option>
+    }
+  </mat-chip-listbox>
+
+  @if (itensVisiveis().length > 0) {
+    <div class="rolagem">
+      <table mat-table [dataSource]="itensVisiveis()" class="tabela">
+        <caption class="oculto">
+          Itens lidos do PDF, na ordem das linhas
+        </caption>
+
+        <ng-container matColumnDef="linha">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Linha</th>
+          <td mat-cell *matCellDef="let item" class="numero">{{ item.numeroLinha }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="referencia">
+          <th mat-header-cell *matHeaderCellDef scope="col">Ref.</th>
+          <td mat-cell *matCellDef="let item">{{ item.referencia ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="descricao">
+          <th mat-header-cell *matHeaderCellDef scope="col">Descrição</th>
+          <td mat-cell *matCellDef="let item" class="descricao">
+            @if (item.descricao) {
+              {{ item.descricao }}
+            } @else {
+              <span class="linha-original">{{ item.linhaOriginal }}</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="unidade">
+          <th mat-header-cell *matHeaderCellDef scope="col">Unidade</th>
+          <td mat-cell *matCellDef="let item">{{ item.unidade ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="modalidade">
+          <th mat-header-cell *matHeaderCellDef scope="col">Modalidade</th>
+          <td mat-cell *matCellDef="let item">{{ modalidade(item.modalidadePreco) }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="quantidade">
+          <th mat-header-cell *matHeaderCellDef scope="col">Quantidade</th>
+          <td mat-cell *matCellDef="let item">
+            @if (item.quantidade === null) {
+              <span class="nao-informada">não informada</span>
+            } @else {
+              {{ item.quantidade }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="preco">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Preço</th>
+          <td mat-cell *matCellDef="let item" class="numero">
+            {{ item.preco === null ? '—' : (item.preco | currency) }}
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="situacao">
+          <th mat-header-cell *matHeaderCellDef scope="col">Situação</th>
+          <td mat-cell *matCellDef="let item">
+            <app-etiqueta-status [apresentacao]="situacao(item)" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="produto">
+          <th mat-header-cell *matHeaderCellDef scope="col">Produto</th>
+          <td mat-cell *matCellDef="let item">{{ item.produtoNome ?? '—' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="erros">
+          <th mat-header-cell *matHeaderCellDef scope="col">Erros</th>
+          <td mat-cell *matCellDef="let item"><app-erros-item [erros]="item.erros" /></td>
+        </ng-container>
+
+        <ng-container matColumnDef="acao">
+          <th mat-header-cell *matHeaderCellDef scope="col"><span class="oculto">Ação</span></th>
+          <td mat-cell *matCellDef="let item" class="acao">
+            @if (emConferencia()) {
+              <button
+                mat-button
+                type="button"
+                (click)="corrigir(item)"
+                [attr.aria-label]="'Corrigir item da linha ' + item.numeroLinha"
+              >
+                Corrigir
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let item; columns: colunas"></tr>
+      </table>
+    </div>
+  } @else {
+    <p class="lista-vazia">Nenhum item nesta situação.</p>
+  }
+} @else if (!carregando()) {
+  <p class="lista-vazia">Importação não encontrada.</p>
+}
