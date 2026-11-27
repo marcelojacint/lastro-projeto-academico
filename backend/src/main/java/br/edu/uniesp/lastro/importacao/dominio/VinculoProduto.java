@@ -40,10 +40,23 @@ public class VinculoProduto {
     protected VinculoProduto() {}
 
     public static VinculoProduto automatico(Long apresentacaoId, Long produtoId, Instant agora) {
+        return novo(apresentacaoId, produtoId, OrigemVinculo.AUTOMATICA, agora);
+    }
+
+    public static VinculoProduto manual(Long apresentacaoId, Long produtoId, Instant agora) {
+        return novo(apresentacaoId, produtoId, OrigemVinculo.MANUAL, agora);
+    }
+
+    public void desativar(Instant agora) {
+        this.ativo = false;
+        this.desativadoEm = agora.truncatedTo(ChronoUnit.MICROS);
+    }
+
+    private static VinculoProduto novo(Long apresentacaoId, Long produtoId, OrigemVinculo origem, Instant agora) {
         VinculoProduto vinculo = new VinculoProduto();
         vinculo.apresentacaoId = apresentacaoId;
         vinculo.produtoId = produtoId;
-        vinculo.origem = OrigemVinculo.AUTOMATICA;
+        vinculo.origem = origem;
         vinculo.ativo = true;
         vinculo.confirmadoEm = agora.truncatedTo(ChronoUnit.MICROS);
         return vinculo;

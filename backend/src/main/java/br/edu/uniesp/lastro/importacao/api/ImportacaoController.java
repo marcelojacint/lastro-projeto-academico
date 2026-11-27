@@ -78,4 +78,10 @@ public class ImportacaoController {
             @PathVariable UUID id, @PathVariable Long itemId, @RequestBody CorrecaoItemRequisicao requisicao) {
         return ImportacaoDetalheResposta.de(conferencia.corrigir(id, itemId, requisicao.paraCorrecao()));
     }
+
+    @PostMapping("/{id}/itens/{itemId}/vinculo")
+    public ImportacaoDetalheResposta associarItem(
+            @PathVariable UUID id, @PathVariable Long itemId, @RequestBody AssociacaoRequisicao requisicao) {
+        return ImportacaoDetalheResposta.de(conferencia.associar(id, itemId, requisicao.produtoId()));
+    }
 }

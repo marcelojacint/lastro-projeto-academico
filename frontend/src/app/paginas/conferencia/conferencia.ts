@@ -6,6 +6,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
+import { concatMap, from } from 'rxjs';
+import {
+  AssociacaoItemComponente,
+  DadosAssociacaoItem,
+  ProdutoAssociado,
+  ResultadoAssociacao,
+} from '../../componentes/associacao-item/associacao-item';
 import {
   CorrecaoItemComponente,
   DadosCorrecaoItem,
@@ -25,6 +32,12 @@ import {
 import { ImportacaoService } from '../../servicos/importacao-service';
 
 type FiltroSituacao = SituacaoItem | 'TODAS';
+
+interface OfertaMesmaLinha {
+  numeroLinha: number;
+  itens: ItemConferencia[];
+  produto: ProdutoAssociado;
+}
 
 interface OpcaoFiltro {
   valor: FiltroSituacao;
@@ -71,6 +84,8 @@ export class ConferenciaPagina implements OnInit {
   protected readonly detalhe = signal<ImportacaoDetalhe | null>(null);
   protected readonly carregando = signal(true);
   protected readonly filtro = signal<FiltroSituacao>('TODAS');
+  protected readonly oferta = signal<OfertaMesmaLinha | null>(null);
+  protected readonly associandoOferta = signal(false);
 
   protected readonly emConferencia = computed(
     () => this.detalhe()?.importacao.status === 'EM_CONFERENCIA',
@@ -134,5 +149,63 @@ export class ConferenciaPagina implements OnInit {
           this.detalhe.set(detalhe);
         }
       });
+  }
+
+  protected associar(item: ItemConferencia): void {
+    const dados: DadosAssociacaoItem = { importacaoId: this.id(), item };
+    this.dialogo
+      .open<AssociacaoItemComponente, DadosAssociacaoItem, ResultadoAssociacao>(
+        AssociacaoItemComponente,
+        { data: dados, autoFocus: 'first-tabbable', restoreFocus: true },
+      )
+      .afterClosed()
+      .subscribe((resultado) => {
+        if (!resultado) {
+          return;
+        }
+        this.detalhe.set(resultado.detalhe);
+        const mesmaLinha = resultado.detalhe.itens.filter(
+          (outro) =>
+            outro.numeroLinha === item.numeroLinha &&
+            outro.id !== item.id &&
+            outro.apresentacaoId !== null &&
+            outro.produtoId === null,
+        );
+        this.oferta.set(
+          mesmaLinha.length > 0
+            ? { numeroLinha: item.numeroLinha, itens: mesmaLinha, produto: resultado.produto }
+            : null,
+        );
+      });
+  }
+
+  protected modalidadesDaOferta(oferta: OfertaMesmaLinha): string {
+    return oferta.itens.map((outro) => this.modalidade(outro.modalidadePreco)).join(' e ');
+  }
+
+  protected aceitarOferta(): void {
+    const oferta = this.oferta();
+    if (oferta === null) {
+      return;
+    }
+    this.associandoOferta.set(true);
+    from(oferta.itens)
+      .pipe(
+        concatMap((outro) =>
+          this.importacaoService.associarItem(this.id(), outro.id, oferta.produto.id),
+        ),
+      )
+      .subscribe({
+        next: (detalhe) => this.detalhe.set(detalhe),
+        complete: () => {
+          this.associandoOferta.set(false);
+          this.oferta.set(null);
+        },
+        error: () => this.associandoOferta.set(false),
+      });
+  }
+
+  protected recusarOferta(): void {
+    this.oferta.set(null);
   }
 }

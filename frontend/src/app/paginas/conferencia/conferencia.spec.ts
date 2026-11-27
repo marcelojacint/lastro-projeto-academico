@@ -11,7 +11,7 @@ import { ConferenciaPagina } from './conferencia';
 describe('ConferenciaPagina', () => {
   let fixture: ComponentFixture<ConferenciaPagina>;
   let http: HttpTestingController;
-  let resultadoDoDialogo: ImportacaoDetalhe | undefined;
+  let resultadoDoDialogo: unknown;
 
   function importacao(status: StatusImportacao, dados: Partial<Importacao> = {}): Importacao {
     return {
@@ -69,6 +69,7 @@ describe('ConferenciaPagina', () => {
       modalidadePreco: null,
       preco: null,
       situacao: 'PENDENTE_ASSOCIACAO',
+      apresentacaoId: null,
       produtoId: null,
       produtoNome: null,
     }),
@@ -172,5 +173,89 @@ describe('ConferenciaPagina', () => {
 
     expect(elemento().querySelectorAll('td button')).toHaveLength(0);
     expect(elemento().textContent).toContain('não está em conferência');
+  });
+  it('deve oferecer associar so os itens que tem apresentacao', async () => {
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens });
+
+    const rotulos = linhas().map((linha) =>
+      Array.from(linha.querySelectorAll('button')).map((botao) => botao.textContent?.trim()),
+    );
+    expect(rotulos).toEqual([
+      ['Corrigir', 'Trocar produto'],
+      ['Corrigir', 'Trocar produto'],
+      ['Corrigir'],
+    ]);
+  });
+
+  it('deve oferecer o mesmo produto para a outra modalidade da linha', async () => {
+    const pendentes = [
+      item(1, { produtoId: null, produtoNome: null, situacao: 'PENDENTE_ASSOCIACAO' }),
+      item(2, {
+        modalidadePreco: 'FARDO',
+        apresentacaoId: 2,
+        produtoId: null,
+        produtoNome: null,
+        situacao: 'PENDENTE_ASSOCIACAO',
+      }),
+    ];
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens: pendentes });
+    resultadoDoDialogo = {
+      detalhe: {
+        importacao: importacao('EM_CONFERENCIA', { itensValidos: 1, itensPendentes: 1 }),
+        itens: [
+          { ...pendentes[0], produtoId: 10, produtoNome: 'Açúcar de coco', situacao: 'VALIDO' },
+          pendentes[1],
+        ],
+      },
+      produto: { id: 10, nome: 'Açúcar de coco' },
+    };
+
+    linhas()[0].querySelectorAll<HTMLButtonElement>('button')[1].click();
+    await fixture.whenStable();
+
+    const oferta = elemento().querySelector('.oferta');
+    expect(oferta?.textContent).toContain('A linha 2 também tem Fardo sem produto.');
+    expect(oferta?.textContent).toContain('Associar a Açúcar de coco?');
+
+    Array.from(oferta!.querySelectorAll<HTMLButtonElement>('button'))
+      .find((botao) => botao.textContent?.trim() === 'Associar também')!
+      .click();
+    const envio = http.expectOne({ method: 'POST', url: '/api/importacoes/imp-1/itens/2/vinculo' });
+    expect(envio.request.body).toEqual({ produtoId: 10 });
+    envio.flush({
+      importacao: importacao('EM_CONFERENCIA', { itensValidos: 2, itensPendentes: 0 }),
+      itens: [
+        { ...pendentes[0], produtoId: 10, produtoNome: 'Açúcar de coco', situacao: 'VALIDO' },
+        { ...pendentes[1], produtoId: 10, produtoNome: 'Açúcar de coco', situacao: 'VALIDO' },
+      ],
+    });
+    await fixture.whenStable();
+
+    expect(elemento().querySelector('.oferta')).toBeNull();
+    expect(linhas()[1].textContent).toContain('Açúcar de coco');
+  });
+
+  it('deve esconder a oferta quando o usuario recusa', async () => {
+    const pendentes = [
+      item(1, { produtoId: null, produtoNome: null, situacao: 'PENDENTE_ASSOCIACAO' }),
+      item(2, { modalidadePreco: 'FARDO', apresentacaoId: 2, produtoId: null, produtoNome: null }),
+    ];
+    await carregar({ importacao: importacao('EM_CONFERENCIA'), itens: pendentes });
+    resultadoDoDialogo = {
+      detalhe: {
+        importacao: importacao('EM_CONFERENCIA'),
+        itens: [{ ...pendentes[0], produtoId: 10, produtoNome: 'Açúcar de coco' }, pendentes[1]],
+      },
+      produto: { id: 10, nome: 'Açúcar de coco' },
+    };
+
+    linhas()[0].querySelectorAll<HTMLButtonElement>('button')[1].click();
+    await fixture.whenStable();
+    Array.from(elemento().querySelectorAll<HTMLButtonElement>('.oferta button'))
+      .find((botao) => botao.textContent?.trim() === 'Agora não')!
+      .click();
+    await fixture.whenStable();
+
+    expect(elemento().querySelector('.oferta')).toBeNull();
   });
 });

@@ -1,5 +1,7 @@
 package br.edu.uniesp.lastro.importacao.dominio;
 
+import br.edu.uniesp.lastro.compartilhado.erro.DadosInvalidosException;
+import br.edu.uniesp.lastro.compartilhado.erro.ErroCampo;
 import br.edu.uniesp.lastro.compartilhado.notificacao.MensagemErro;
 import br.edu.uniesp.lastro.fornecedor.dominio.LayoutPdf;
 import jakarta.persistence.Column;
@@ -105,6 +107,17 @@ public class ItemImportado {
         this.situacao = resultado.situacaoComAssociacao(apresentacaoAssociada);
         this.erros = new ArrayList<>(resultado.erros());
         this.apresentacaoId = apresentacaoId;
+    }
+
+    public void exigirApresentacao() {
+        if (apresentacaoId == null) {
+            throw new DadosInvalidosException(List.of(new ErroCampo(
+                    "itemId", "Corrija a descrição e a modalidade do item antes de associar a um produto")));
+        }
+    }
+
+    public void marcarAssociado() {
+        this.situacao = erros.isEmpty() ? SituacaoItem.VALIDO : SituacaoItem.INVALIDO;
     }
 
     public Long getId() {
