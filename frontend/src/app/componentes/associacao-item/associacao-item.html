@@ -1,0 +1,53 @@
+<h2 mat-dialog-title>Associar a um produto</h2>
+
+<form [formGroup]="formulario" (ngSubmit)="associar()" novalidate>
+  <mat-dialog-content class="conteudo">
+    <dl class="origem">
+      <dt>Item</dt>
+      <dd>{{ dados.item.descricao }}</dd>
+      <dt>Modalidade</dt>
+      <dd>{{ modalidade }}</dd>
+      @if (dados.item.produtoNome) {
+        <dt>Produto atual</dt>
+        <dd>{{ dados.item.produtoNome }}</dd>
+      }
+    </dl>
+
+    <mat-form-field>
+      <mat-label>Produto da loja</mat-label>
+      <input
+        matInput
+        formControlName="busca"
+        [matAutocomplete]="lista"
+        placeholder="Digite parte do nome"
+        cdkFocusInitial
+      />
+      <mat-autocomplete
+        #lista="matAutocomplete"
+        [displayWith]="nomeDoProduto"
+        (optionSelected)="escolher($event.option.value)"
+      >
+        @for (produto of sugestoes(); track produto.id) {
+          <mat-option [value]="produto">
+            {{ produto.nome }}
+            @if (produto.codigo) {
+              <span class="codigo">· {{ produto.codigo }}</span>
+            }
+          </mat-option>
+        }
+      </mat-autocomplete>
+      <mat-hint>Só aparecem produtos ativos</mat-hint>
+    </mat-form-field>
+
+    @if (erro()) {
+      <p class="erro" role="alert">{{ erro() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Cancelar</button>
+    <button mat-flat-button type="submit" [disabled]="salvando() || escolhido() === null">
+      {{ salvando() ? 'Associando…' : 'Associar' }}
+    </button>
+  </mat-dialog-actions>
+</form>

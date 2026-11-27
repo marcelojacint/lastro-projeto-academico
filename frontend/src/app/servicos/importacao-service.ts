@@ -27,4 +27,10 @@ export class ImportacaoService {
   corrigirItem(id: string, itemId: number, correcao: CorrecaoItem): Observable<ImportacaoDetalhe> {
     return this.http.put<ImportacaoDetalhe>(`${this.url}/${id}/itens/${itemId}`, correcao);
   }
+
+  associarItem(id: string, itemId: number, produtoId: number): Observable<ImportacaoDetalhe> {
+    return this.http.post<ImportacaoDetalhe>(`${this.url}/${id}/itens/${itemId}/vinculo`, {
+      produtoId,
+    });
+  }
 }

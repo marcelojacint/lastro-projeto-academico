@@ -1,0 +1,32 @@
+.conteudo {
+  display: flex;
+  flex-direction: column;
+  min-width: min(480px, 80vw);
+}
+
+.origem {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 16px;
+  font: var(--mat-sys-body-small);
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.codigo {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.erro {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-error);
+}
