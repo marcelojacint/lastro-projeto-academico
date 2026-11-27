@@ -1,5 +1,7 @@
 package br.edu.uniesp.lastro.importacao.aplicacao;
 
+import br.edu.uniesp.lastro.compartilhado.erro.DadosInvalidosException;
+import br.edu.uniesp.lastro.compartilhado.erro.ErroCampo;
 import br.edu.uniesp.lastro.compartilhado.erro.RecursoNaoEncontradoException;
 import br.edu.uniesp.lastro.fornecedor.aplicacao.FornecedorService;
 import br.edu.uniesp.lastro.fornecedor.dominio.Fornecedor;
@@ -13,10 +15,13 @@ import br.edu.uniesp.lastro.importacao.infraestrutura.ImportacaoRepository;
 import br.edu.uniesp.lastro.importacao.infraestrutura.ItemImportadoRepository;
 import br.edu.uniesp.lastro.importacao.infraestrutura.VinculoProdutoRepository;
 import br.edu.uniesp.lastro.produto.aplicacao.ProdutoService;
+import br.edu.uniesp.lastro.produto.dominio.Produto;
+import br.edu.uniesp.lastro.produto.dominio.StatusProduto;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -78,9 +83,7 @@ public class ConferenciaService {
     public DetalheImportacao corrigir(UUID importacaoId, Long itemId, CorrecaoItem correcao) {
         Importacao importacao = buscar(importacaoId);
         importacao.exigirEmConferencia();
-        ItemImportado item = itens.findByIdAndImportacaoId(itemId, importacaoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException(
-                        "Item " + itemId + " não encontrado na importação " + importacaoId));
+        ItemImportado item = buscarItem(importacaoId, itemId);
         Fornecedor fornecedor = fornecedorService.buscar(importacao.getFornecedorId());
         Instant agora = Instant.now();
         ItemExtraido corrigido = correcao.sobre(item);
@@ -88,13 +91,55 @@ public class ConferenciaService {
         boolean associada =
                 associacao.associar(apresentacaoId, corrigido.descricao(), associacao.carregarCatalogo(), agora);
         item.corrigir(corrigido, fornecedor.getLayoutPdf(), apresentacaoId, associada);
+        return recontar(importacao);
+    }
+
+    @Transactional
+    public DetalheImportacao associar(UUID importacaoId, Long itemId, Long produtoId) {
+        Importacao importacao = buscar(importacaoId);
+        importacao.exigirEmConferencia();
+        ItemImportado item = buscarItem(importacaoId, itemId);
+        item.exigirApresentacao();
+        if (produtoId == null) {
+            throw new DadosInvalidosException(List.of(new ErroCampo("produtoId", "Escolha o produto")));
+        }
+        Produto produto = produtoService.buscar(produtoId);
+        if (produto.getStatus() != StatusProduto.ATIVO) {
+            throw new DadosInvalidosException(
+                    List.of(new ErroCampo("produtoId", "Produto inativo não pode ser associado")));
+        }
+        Long apresentacaoId = item.getApresentacaoId();
+        Instant agora = Instant.now();
+        Optional<VinculoProduto> atual = vinculos.findByApresentacaoIdAndAtivoTrue(apresentacaoId);
+        boolean mesmoProduto =
+                atual.map(vinculo -> vinculo.getProdutoId().equals(produtoId)).orElse(false);
+        if (!mesmoProduto) {
+            atual.ifPresent(vinculo -> {
+                vinculo.desativar(agora);
+                vinculos.saveAndFlush(vinculo);
+            });
+            vinculos.saveAndFlush(VinculoProduto.manual(apresentacaoId, produtoId, agora));
+        }
+        itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(importacaoId).stream()
+                .filter(lido -> apresentacaoId.equals(lido.getApresentacaoId()))
+                .forEach(ItemImportado::marcarAssociado);
+        return recontar(importacao);
+    }
+
+    private DetalheImportacao recontar(Importacao importacao) {
         itens.flush();
-        List<ItemImportado> todos = itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(importacaoId);
+        List<ItemImportado> todos = itens.findByImportacaoIdOrderByNumeroLinhaAscIdAsc(importacao.getId());
         long validos = todos.stream()
                 .filter(lido -> lido.getSituacao() == SituacaoItem.VALIDO)
                 .count();
         importacao.atualizarContadores(todos.size(), (int) validos);
-        return detalhar(importacaoId);
+        return detalhar(importacao.getId());
+    }
+
+    private ItemImportado buscarItem(UUID importacaoId, Long itemId) {
+        return itens.findByIdAndImportacaoId(itemId, importacaoId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException(
+                        "Item " + itemId + " não encontrado na importação " + importacaoId));
     }
 
     private Importacao buscar(UUID importacaoId) {
