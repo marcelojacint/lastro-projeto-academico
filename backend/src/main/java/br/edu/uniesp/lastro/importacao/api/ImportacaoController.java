@@ -2,6 +2,7 @@ package br.edu.uniesp.lastro.importacao.api;
 
 import br.edu.uniesp.lastro.compartilhado.erro.ErroCampo;
 import br.edu.uniesp.lastro.compartilhado.erro.ProcessamentoFalhouException;
+import br.edu.uniesp.lastro.importacao.aplicacao.ConferenciaService;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoComFornecedor;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoService;
 import br.edu.uniesp.lastro.importacao.dominio.FiltroImportacao;
@@ -12,10 +13,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +31,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImportacaoController {
 
     private final ImportacaoService service;
+    private final ConferenciaService conferencia;
 
-    public ImportacaoController(ImportacaoService service) {
+    public ImportacaoController(ImportacaoService service, ConferenciaService conferencia) {
         this.service = service;
+        this.conferencia = conferencia;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -59,5 +66,16 @@ public class ImportacaoController {
         return service.listar(new FiltroImportacao(fornecedorId, status)).stream()
                 .map(ImportacaoResposta::de)
                 .toList();
+    }
+
+    @GetMapping("/{id}")
+    public ImportacaoDetalheResposta detalhar(@PathVariable UUID id) {
+        return ImportacaoDetalheResposta.de(conferencia.detalhar(id));
+    }
+
+    @PutMapping("/{id}/itens/{itemId}")
+    public ImportacaoDetalheResposta corrigirItem(
+            @PathVariable UUID id, @PathVariable Long itemId, @RequestBody CorrecaoItemRequisicao requisicao) {
+        return ImportacaoDetalheResposta.de(conferencia.corrigir(id, itemId, requisicao.paraCorrecao()));
     }
 }
