@@ -189,7 +189,7 @@ describe('ImportacaoNovaPagina', () => {
     expect(erroDoArquivo()).toBe('O arquivo deve ser um PDF');
     expect(elemento().querySelector('.id')).toBeNull();
   });
-  it('deve mostrar quantos itens foram lidos na confirmacao', async () => {
+  it('deve mostrar itens lidos, validos e pendentes na confirmacao', async () => {
     await carregarFornecedores([fornecedor(1, 'Natural Sul', true)]);
     await escolherFornecedor('Natural Sul');
     await escolherArquivo('Fornecedor_1.pdf', 2048);
@@ -206,8 +206,8 @@ describe('ImportacaoNovaPagina', () => {
       concluidaEm: null,
       status: 'EM_CONFERENCIA',
       totalItens: 4,
-      itensValidos: 0,
-      itensPendentes: 4,
+      itensValidos: 2,
+      itensPendentes: 2,
       motivoFalha: null,
     });
     await fixture.whenStable();
@@ -217,6 +217,8 @@ describe('ImportacaoNovaPagina', () => {
       rotulo.nextElementSibling?.textContent?.trim(),
     ]);
     expect(dados).toContainEqual(['Itens lidos', '4']);
+    expect(dados).toContainEqual(['Válidos', '2']);
+    expect(dados).toContainEqual(['Pendentes', '2']);
     expect(elemento().textContent).toContain('Em conferência');
   });
 

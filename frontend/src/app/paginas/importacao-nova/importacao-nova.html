@@ -20,6 +20,10 @@
       <dd>{{ importacao.nomeArquivo }} · {{ formatarTamanho(importacao.tamanhoBytes) }}</dd>
       <dt>Itens lidos</dt>
       <dd>{{ importacao.totalItens }}</dd>
+      <dt>Válidos</dt>
+      <dd>{{ importacao.itensValidos }}</dd>
+      <dt>Pendentes</dt>
+      <dd>{{ importacao.itensPendentes }}</dd>
       <dt>Status</dt>
       <dd><app-status-importacao [status]="importacao.status" /></dd>
     </dl>

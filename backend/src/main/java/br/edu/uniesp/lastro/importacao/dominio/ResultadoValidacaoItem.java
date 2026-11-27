@@ -12,4 +12,11 @@ public record ResultadoValidacaoItem(SituacaoItem situacao, List<MensagemErro> e
     public boolean invalido() {
         return situacao == SituacaoItem.INVALIDO;
     }
+
+    public SituacaoItem situacaoComAssociacao(boolean apresentacaoAssociada) {
+        if (invalido()) {
+            return SituacaoItem.INVALIDO;
+        }
+        return apresentacaoAssociada ? SituacaoItem.VALIDO : SituacaoItem.PENDENTE_ASSOCIACAO;
+    }
 }
