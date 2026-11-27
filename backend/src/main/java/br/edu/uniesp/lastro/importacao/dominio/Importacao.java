@@ -77,8 +77,23 @@ public class Importacao {
     }
 
     public void exigirEmConferencia() {
+        exigirEmConferencia("Só dá para corrigir itens de uma importação em conferência");
+    }
+
+    public void concluir(boolean sobrouPendencia, Instant agora) {
+        exigirEmConferencia("Só dá para concluir uma importação em conferência");
+        this.status = sobrouPendencia ? StatusImportacao.CONCLUIDA_COM_PENDENCIAS : StatusImportacao.CONCLUIDA;
+        this.concluidaEm = agora.truncatedTo(ChronoUnit.MICROS);
+    }
+
+    public void descartar() {
+        exigirEmConferencia("Só dá para descartar uma importação em conferência");
+        this.status = StatusImportacao.DESCARTADA;
+    }
+
+    private void exigirEmConferencia(String mensagem) {
         if (status != StatusImportacao.EM_CONFERENCIA) {
-            throw new ConflitoException("status", "Só dá para corrigir itens de uma importação em conferência");
+            throw new ConflitoException("status", mensagem);
         }
     }
 
