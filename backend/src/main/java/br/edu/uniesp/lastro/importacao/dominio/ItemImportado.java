@@ -96,6 +96,17 @@ public class ItemImportado {
                 apresentacaoId);
     }
 
+    public void corrigir(ItemExtraido corrigido, LayoutPdf layout, Long apresentacaoId, boolean apresentacaoAssociada) {
+        ResultadoValidacaoItem resultado = ValidacaoItem.validar(corrigido, layout);
+        this.referencia = corrigido.referencia();
+        this.descricao = corrigido.descricao();
+        this.unidade = corrigido.unidade();
+        this.preco = corrigido.preco();
+        this.situacao = resultado.situacaoComAssociacao(apresentacaoAssociada);
+        this.erros = new ArrayList<>(resultado.erros());
+        this.apresentacaoId = apresentacaoId;
+    }
+
     public Long getId() {
         return id;
     }
