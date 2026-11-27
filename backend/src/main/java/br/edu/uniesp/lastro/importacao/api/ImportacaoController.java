@@ -2,6 +2,7 @@ package br.edu.uniesp.lastro.importacao.api;
 
 import br.edu.uniesp.lastro.compartilhado.erro.ErroCampo;
 import br.edu.uniesp.lastro.compartilhado.erro.ProcessamentoFalhouException;
+import br.edu.uniesp.lastro.importacao.aplicacao.ConclusaoService;
 import br.edu.uniesp.lastro.importacao.aplicacao.ConferenciaService;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoComFornecedor;
 import br.edu.uniesp.lastro.importacao.aplicacao.ImportacaoService;
@@ -32,10 +33,12 @@ public class ImportacaoController {
 
     private final ImportacaoService service;
     private final ConferenciaService conferencia;
+    private final ConclusaoService conclusao;
 
-    public ImportacaoController(ImportacaoService service, ConferenciaService conferencia) {
+    public ImportacaoController(ImportacaoService service, ConferenciaService conferencia, ConclusaoService conclusao) {
         this.service = service;
         this.conferencia = conferencia;
+        this.conclusao = conclusao;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -83,5 +86,15 @@ public class ImportacaoController {
     public ImportacaoDetalheResposta associarItem(
             @PathVariable UUID id, @PathVariable Long itemId, @RequestBody AssociacaoRequisicao requisicao) {
         return ImportacaoDetalheResposta.de(conferencia.associar(id, itemId, requisicao.produtoId()));
+    }
+
+    @PostMapping("/{id}/concluir")
+    public ImportacaoResposta concluir(@PathVariable UUID id) {
+        return ImportacaoResposta.de(conclusao.concluir(id));
+    }
+
+    @PostMapping("/{id}/descartar")
+    public ImportacaoResposta descartar(@PathVariable UUID id) {
+        return ImportacaoResposta.de(conclusao.descartar(id));
     }
 }
