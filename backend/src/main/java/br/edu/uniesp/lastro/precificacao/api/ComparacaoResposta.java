@@ -1,9 +1,11 @@
 package br.edu.uniesp.lastro.precificacao.api;
 
 import br.edu.uniesp.lastro.importacao.api.ImportacaoResposta;
+import br.edu.uniesp.lastro.importacao.dominio.ApresentacaoFornecedor;
 import br.edu.uniesp.lastro.importacao.dominio.ItemImportado;
 import br.edu.uniesp.lastro.importacao.dominio.ModalidadePreco;
 import br.edu.uniesp.lastro.precificacao.aplicacao.ConsultaComparacaoService.ComparacaoImportacao;
+import br.edu.uniesp.lastro.precificacao.aplicacao.ConsultaComparacaoService.ItemAusente;
 import br.edu.uniesp.lastro.precificacao.aplicacao.ConsultaComparacaoService.ItemComparado;
 import br.edu.uniesp.lastro.precificacao.dominio.Classificacao;
 import br.edu.uniesp.lastro.precificacao.dominio.ComparacaoPreco;
@@ -13,13 +15,17 @@ import java.util.List;
 import java.util.Map;
 
 public record ComparacaoResposta(
-        ImportacaoResposta importacao, Map<Classificacao, Long> totais, List<ItemComparadoResposta> itens) {
+        ImportacaoResposta importacao,
+        Map<Classificacao, Long> totais,
+        List<ItemComparadoResposta> itens,
+        List<ItemAusenteResposta> ausentes) {
 
     static ComparacaoResposta de(ComparacaoImportacao comparacao) {
         return new ComparacaoResposta(
                 ImportacaoResposta.de(comparacao.importacao()),
                 comparacao.totais(),
-                comparacao.itens().stream().map(ItemComparadoResposta::de).toList());
+                comparacao.itens().stream().map(ItemComparadoResposta::de).toList(),
+                comparacao.ausentes().stream().map(ItemAusenteResposta::de).toList());
     }
 
     public record ItemComparadoResposta(
@@ -59,6 +65,31 @@ public record ComparacaoResposta(
                     comparacao.getVariacaoPercentual(),
                     comparacao.getClassificacao(),
                     comparado.motivosPendencia());
+        }
+    }
+
+    public record ItemAusenteResposta(
+            Long apresentacaoId,
+            String referencia,
+            String descricao,
+            String unidade,
+            ModalidadePreco modalidadePreco,
+            Long produtoId,
+            String produtoNome,
+            BigDecimal ultimoPrecoValido) {
+
+        static ItemAusenteResposta de(ItemAusente ausente) {
+            ApresentacaoFornecedor apresentacao = ausente.ausente().apresentacao();
+            Produto produto = ausente.produto();
+            return new ItemAusenteResposta(
+                    apresentacao.getId(),
+                    apresentacao.getReferencia(),
+                    apresentacao.getDescricaoOriginal(),
+                    apresentacao.getUnidade(),
+                    apresentacao.getModalidadePreco(),
+                    produto == null ? null : produto.getId(),
+                    produto == null ? null : produto.getNome(),
+                    ausente.ausente().ausencia().getUltimoPrecoValido());
         }
     }
 }

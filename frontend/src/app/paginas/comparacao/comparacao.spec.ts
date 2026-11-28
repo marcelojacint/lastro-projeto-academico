@@ -76,7 +76,7 @@ describe('ComparacaoPagina', () => {
 
   function comparacao(
     dados: Partial<ComparacaoImportacao> = {},
-    ausentes?: ItemAusente[],
+    ausentes: ItemAusente[] = [],
   ): ComparacaoImportacao {
     return {
       importacao: {
@@ -96,7 +96,7 @@ describe('ComparacaoPagina', () => {
       },
       totais: { AUMENTOU: 1, DIMINUIU: 1, SEM_ALTERACAO: 1, NOVO: 1, PENDENTE: 1 },
       itens,
-      ...(ausentes ? { ausentes } : {}),
+      ausentes,
       ...dados,
     };
   }
@@ -235,6 +235,7 @@ describe('ComparacaoPagina', () => {
           descricao: 'DOCANTE STEVIA COLOR ANDINA 40G',
           unidade: 'UN',
           modalidadePreco: 'UNITARIO',
+          produtoId: 3,
           produtoNome: 'Stevia',
           ultimoPrecoValido: 74,
         },
