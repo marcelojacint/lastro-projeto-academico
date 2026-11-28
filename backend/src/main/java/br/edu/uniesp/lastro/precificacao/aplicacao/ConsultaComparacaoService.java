@@ -13,6 +13,8 @@ import br.edu.uniesp.lastro.importacao.dominio.VinculoProduto;
 import br.edu.uniesp.lastro.importacao.infraestrutura.ImportacaoRepository;
 import br.edu.uniesp.lastro.importacao.infraestrutura.VinculoProdutoRepository;
 import br.edu.uniesp.lastro.precificacao.dominio.Classificacao;
+import br.edu.uniesp.lastro.precificacao.infraestrutura.AusenciaComApresentacao;
+import br.edu.uniesp.lastro.precificacao.infraestrutura.AusenciaItemRepository;
 import br.edu.uniesp.lastro.precificacao.infraestrutura.ComparacaoComItem;
 import br.edu.uniesp.lastro.precificacao.infraestrutura.ComparacaoPrecoRepository;
 import br.edu.uniesp.lastro.produto.aplicacao.ProdutoService;
@@ -25,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,7 @@ public class ConsultaComparacaoService {
 
     private final ImportacaoRepository importacoes;
     private final ComparacaoPrecoRepository comparacoes;
+    private final AusenciaItemRepository ausencias;
     private final VinculoProdutoRepository vinculos;
     private final FornecedorService fornecedorService;
     private final ProdutoService produtoService;
@@ -44,11 +48,13 @@ public class ConsultaComparacaoService {
     public ConsultaComparacaoService(
             ImportacaoRepository importacoes,
             ComparacaoPrecoRepository comparacoes,
+            AusenciaItemRepository ausencias,
             VinculoProdutoRepository vinculos,
             FornecedorService fornecedorService,
             ProdutoService produtoService) {
         this.importacoes = importacoes;
         this.comparacoes = comparacoes;
+        this.ausencias = ausencias;
         this.vinculos = vinculos;
         this.fornecedorService = fornecedorService;
         this.produtoService = produtoService;
@@ -63,7 +69,13 @@ public class ConsultaComparacaoService {
             throw new ConflitoException("status", "A comparação só existe depois que a importação é concluída");
         }
         List<ComparacaoComItem> todas = comparacoes.listarComItens(importacaoId);
-        Map<Long, Produto> produtoPorApresentacao = produtosPorApresentacao(todas);
+        List<AusenciaComApresentacao> ausentes = ausencias.listarComApresentacoes(importacaoId);
+        Map<Long, Produto> produtoPorApresentacao = produtosPorApresentacao(Stream.concat(
+                        todas.stream().map(comparada -> comparada.item().getApresentacaoId()),
+                        ausentes.stream().map(ausente -> ausente.apresentacao().getId()))
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList());
         List<ItemComparado> itens = todas.stream()
                 .filter(comparada -> filtro == null || comparada.comparacao().getClassificacao() == filtro)
                 .map(comparada -> new ItemComparado(
@@ -73,15 +85,16 @@ public class ConsultaComparacaoService {
                 .toList();
         String fornecedorNome =
                 fornecedorService.buscar(importacao.getFornecedorId()).getNome();
-        return new ComparacaoImportacao(new ImportacaoComFornecedor(importacao, fornecedorNome), contar(todas), itens);
+        List<ItemAusente> itensAusentes = ausentes.stream()
+                .map(ausente -> new ItemAusente(
+                        ausente,
+                        produtoPorApresentacao.get(ausente.apresentacao().getId())))
+                .toList();
+        return new ComparacaoImportacao(
+                new ImportacaoComFornecedor(importacao, fornecedorNome), contar(todas), itens, itensAusentes);
     }
 
-    private Map<Long, Produto> produtosPorApresentacao(List<ComparacaoComItem> comparadas) {
-        List<Long> apresentacoes = comparadas.stream()
-                .map(comparada -> comparada.item().getApresentacaoId())
-                .filter(Objects::nonNull)
-                .distinct()
-                .toList();
+    private Map<Long, Produto> produtosPorApresentacao(List<Long> apresentacoes) {
         Map<Long, Long> produtoIdPorApresentacao = vinculos.findByApresentacaoIdInAndAtivoTrue(apresentacoes).stream()
                 .collect(Collectors.toMap(VinculoProduto::getApresentacaoId, VinculoProduto::getProdutoId));
         Map<Long, Produto> produtos = produtoService.porId(produtoIdPorApresentacao.values());
@@ -114,6 +127,11 @@ public class ConsultaComparacaoService {
 
     public record ItemComparado(ComparacaoComItem comparada, Produto produto, List<String> motivosPendencia) {}
 
+    public record ItemAusente(AusenciaComApresentacao ausente, Produto produto) {}
+
     public record ComparacaoImportacao(
-            ImportacaoComFornecedor importacao, Map<Classificacao, Long> totais, List<ItemComparado> itens) {}
+            ImportacaoComFornecedor importacao,
+            Map<Classificacao, Long> totais,
+            List<ItemComparado> itens,
+            List<ItemAusente> ausentes) {}
 }

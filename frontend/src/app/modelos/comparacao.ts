@@ -43,6 +43,7 @@ export interface ItemAusente {
   descricao: string;
   unidade: string | null;
   modalidadePreco: ModalidadePreco;
+  produtoId: number | null;
   produtoNome: string | null;
   ultimoPrecoValido: number;
 }
@@ -51,7 +52,7 @@ export interface ComparacaoImportacao {
   importacao: Importacao;
   totais: Record<Classificacao, number>;
   itens: ItemComparado[];
-  ausentes?: ItemAusente[];
+  ausentes: ItemAusente[];
 }
 
 export function sinalDoValor(valor: number): string {
