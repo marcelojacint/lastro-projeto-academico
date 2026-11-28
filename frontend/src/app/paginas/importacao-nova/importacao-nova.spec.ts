@@ -245,4 +245,84 @@ describe('ImportacaoNovaPagina', () => {
     expect(elemento().textContent).toContain('A tentativa ficou registrada como falha');
     expect(elemento().querySelector('a[href="/importacoes"]')).not.toBeNull();
   });
+
+  describe('quando o arquivo ja foi importado', () => {
+    const original = '7c3e9a10-5b2d-4f6e-8a1c-2d3e4f5a6b7c';
+    const mensagem = 'Este arquivo já foi importado para este fornecedor';
+
+    async function enviarDuplicado(): Promise<void> {
+      await carregarFornecedores([fornecedor(1, 'Natural Sul', true)]);
+      await escolherFornecedor('Natural Sul');
+      await escolherArquivo('Fornecedor_1.pdf', 2048);
+      await enviar();
+      envio().flush(
+        {
+          status: 409,
+          detail: mensagem,
+          importacaoId: original,
+          erros: [{ campo: 'arquivo', mensagem }],
+        },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await fixture.whenStable();
+    }
+
+    function detalheDaOriginal(status: Importacao['status']): void {
+      http.expectOne({ method: 'GET', url: `/api/importacoes/${original}` }).flush({
+        importacao: {
+          id: original,
+          fornecedorId: 1,
+          fornecedorNome: 'Natural Sul',
+          nomeArquivo: 'Fornecedor_1.pdf',
+          tamanhoBytes: 2048,
+          hashSha256: 'd'.repeat(64),
+          recebidaEm: '2026-11-20T10:00:00Z',
+          concluidaEm: status === 'EM_CONFERENCIA' ? null : '2026-11-20T11:00:00Z',
+          status,
+          totalItens: 4,
+          itensValidos: 4,
+          itensPendentes: 0,
+          motivoFalha: null,
+        },
+        itens: [],
+      });
+    }
+
+    function aviso(): HTMLElement | null {
+      return elemento().querySelector('.aviso-duplicada');
+    }
+
+    it('deve avisar com link para a conferencia da importacao original', async () => {
+      await enviarDuplicado();
+      detalheDaOriginal('EM_CONFERENCIA');
+      await fixture.whenStable();
+
+      expect(aviso()?.textContent).toContain(mensagem);
+      expect(aviso()?.querySelector('a')?.getAttribute('href')).toBe(
+        `/importacoes/${original}/conferencia`,
+      );
+      expect(erroDoArquivo()).toBeUndefined();
+      expect(elemento().textContent).not.toContain('A tentativa ficou registrada como falha');
+    });
+
+    it('deve levar a comparacao quando a importacao original ja foi concluida', async () => {
+      await enviarDuplicado();
+      detalheDaOriginal('CONCLUIDA');
+      await fixture.whenStable();
+
+      expect(aviso()?.querySelector('a')?.getAttribute('href')).toBe(
+        `/importacoes/${original}/comparacao`,
+      );
+    });
+
+    it('deve tirar o aviso ao escolher outro arquivo', async () => {
+      await enviarDuplicado();
+      detalheDaOriginal('EM_CONFERENCIA');
+      await fixture.whenStable();
+
+      await escolherArquivo('Fornecedor_1_v2.pdf', 2048);
+
+      expect(aviso()).toBeNull();
+    });
+  });
 });
