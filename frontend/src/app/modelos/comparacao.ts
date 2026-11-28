@@ -5,10 +5,10 @@ export type Classificacao = 'AUMENTOU' | 'DIMINUIU' | 'SEM_ALTERACAO' | 'NOVO' |
 
 export const CLASSIFICACOES: Record<Classificacao, ApresentacaoStatus> = {
   AUMENTOU: { rotulo: 'Aumentou', icone: 'arrow_upward', tom: 'erro' },
-  DIMINUIU: { rotulo: 'Diminuiu', icone: 'arrow_downward', tom: 'sucesso' },
+  DIMINUIU: { rotulo: 'Diminuiu', icone: 'arrow_downward', tom: 'queda' },
   SEM_ALTERACAO: { rotulo: 'Sem alteração', icone: 'equal', tom: 'neutro' },
   NOVO: { rotulo: 'Novo', icone: 'star', tom: 'andamento' },
-  PENDENTE: { rotulo: 'Pendente', icone: 'warning', tom: 'atencao' },
+  PENDENTE: { rotulo: 'Pendente', icone: 'warning', tom: 'pendente' },
 };
 
 export const ORDEM_CLASSIFICACOES: Classificacao[] = [

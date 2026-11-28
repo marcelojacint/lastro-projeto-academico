@@ -74,7 +74,13 @@
 
         <ng-container matColumnDef="diferenca">
           <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Diferença</th>
-          <td mat-cell *matCellDef="let item" class="numero">
+          <td
+            mat-cell
+            *matCellDef="let item"
+            class="numero"
+            [class.alta]="item.classificacao === 'AUMENTOU'"
+            [class.queda]="item.classificacao === 'DIMINUIU'"
+          >
             @if (item.diferenca === null) {
               <span aria-hidden="true">—</span>
               <span class="oculto">Sem diferença</span>
@@ -87,7 +93,13 @@
 
         <ng-container matColumnDef="variacao">
           <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Variação</th>
-          <td mat-cell *matCellDef="let item" class="numero variacao">
+          <td
+            mat-cell
+            *matCellDef="let item"
+            class="numero variacao"
+            [class.alta]="item.classificacao === 'AUMENTOU'"
+            [class.queda]="item.classificacao === 'DIMINUIU'"
+          >
             @if (item.classificacao === 'PENDENTE') {
               <span class="motivos">{{ item.motivosPendencia.join(' · ') }}</span>
             } @else if (item.variacaoPercentual === null) {

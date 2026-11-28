@@ -63,6 +63,14 @@
   overflow-wrap: anywhere;
 }
 
+.alta {
+  color: var(--mat-sys-error);
+}
+
+.queda {
+  color: var(--lastro-cor-queda);
+}
+
 .variacao .motivos {
   display: inline-block;
   max-width: 240px;

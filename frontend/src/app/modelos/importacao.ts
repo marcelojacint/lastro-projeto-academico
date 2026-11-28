@@ -6,7 +6,8 @@ export type StatusImportacao =
   | 'FALHOU'
   | 'DESCARTADA';
 
-export type TomStatus = 'neutro' | 'andamento' | 'sucesso' | 'atencao' | 'erro';
+export type TomStatus =
+  'neutro' | 'andamento' | 'sucesso' | 'atencao' | 'erro' | 'queda' | 'pendente';
 
 export interface ApresentacaoStatus {
   rotulo: string;
