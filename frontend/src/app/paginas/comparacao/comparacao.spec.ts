@@ -183,6 +183,28 @@ describe('ComparacaoPagina', () => {
     expect(icones.every((icone) => icone.getAttribute('aria-hidden') === 'true')).toBe(true);
   });
 
+  it('deve colorir diferenca e variacao so de aumento e queda', async () => {
+    await responder(comparacao());
+
+    const tons = Array.from(elemento().querySelectorAll('tr.mat-mdc-row')).map((linha) => {
+      const celulas = linha.querySelectorAll('td');
+      return [celulas[3], celulas[4]].map((celula) =>
+        celula.classList.contains('alta')
+          ? 'alta'
+          : celula.classList.contains('queda')
+            ? 'queda'
+            : '',
+      );
+    });
+    expect(tons).toEqual([
+      ['alta', 'alta'],
+      ['queda', 'queda'],
+      ['', ''],
+      ['', ''],
+      ['', ''],
+    ]);
+  });
+
   it('deve filtrar pela classificacao pedindo a API e manter os totais', async () => {
     await responder(comparacao());
 

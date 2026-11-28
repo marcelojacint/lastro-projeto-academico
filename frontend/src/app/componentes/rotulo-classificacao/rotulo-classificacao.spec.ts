@@ -20,10 +20,10 @@ describe('RotuloClassificacaoComponente', () => {
 
   it.each<[Classificacao, string, string, string]>([
     ['AUMENTOU', 'Aumentou', 'arrow_upward', 'tom-erro'],
-    ['DIMINUIU', 'Diminuiu', 'arrow_downward', 'tom-sucesso'],
+    ['DIMINUIU', 'Diminuiu', 'arrow_downward', 'tom-queda'],
     ['SEM_ALTERACAO', 'Sem alteração', 'equal', 'tom-neutro'],
     ['NOVO', 'Novo', 'star', 'tom-andamento'],
-    ['PENDENTE', 'Pendente', 'warning', 'tom-atencao'],
+    ['PENDENTE', 'Pendente', 'warning', 'tom-pendente'],
   ])(
     'deve mostrar %s com rotulo em texto, icone decorativo e cor',
     async (classificacao, rotulo, icone, tom) => {
