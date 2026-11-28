@@ -23,6 +23,15 @@ class ExtratorTextoPdfTest {
     }
 
     @Test
+    void deveExtrairAsLinhasDoPdfDoFornecedor1SemALinha1077() {
+        assertThat(extrator.extrairLinhas(PdfDeTeste.recurso("Fornecedor_1_v3.pdf")))
+                .containsExactly(
+                        "Ref. Interna Produto Unidade Preço KG Preço Fardo",
+                        "1076 ACUCAR DE COCO KG 35 32",
+                        "1078 CHA DE HIBISCO 100G UN 20 18");
+    }
+
+    @Test
     void deveExtrairAsLinhasDoPdfDoFornecedor2() {
         assertThat(extrator.extrairLinhas(PdfDeTeste.recurso("Fornecedor_2.pdf")))
                 .containsExactly(
