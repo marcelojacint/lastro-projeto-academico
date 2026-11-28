@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { Classificacao, ComparacaoImportacao } from '../modelos/comparacao';
 import { Importacao } from '../modelos/importacao';
 import { CorrecaoItem, ImportacaoDetalhe } from '../modelos/item-importado';
 
@@ -40,5 +41,10 @@ export class ImportacaoService {
 
   descartar(id: string): Observable<Importacao> {
     return this.http.post<Importacao>(`${this.url}/${id}/descartar`, null);
+  }
+
+  comparar(id: string, classificacao: Classificacao | null): Observable<ComparacaoImportacao> {
+    const params = classificacao ? new HttpParams().set('classificacao', classificacao) : undefined;
+    return this.http.get<ComparacaoImportacao>(`${this.url}/${id}/comparacao`, { params });
   }
 }
