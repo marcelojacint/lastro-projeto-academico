@@ -22,7 +22,7 @@ public record ImportacaoResposta(
         int itensPendentes,
         MotivoFalha motivoFalha) {
 
-    static ImportacaoResposta de(ImportacaoComFornecedor resultado) {
+    public static ImportacaoResposta de(ImportacaoComFornecedor resultado) {
         Importacao importacao = resultado.importacao();
         return new ImportacaoResposta(
                 importacao.getId(),

@@ -1,0 +1,168 @@
+@let atual = comparacao();
+
+<a mat-button routerLink="/importacoes" class="voltar">
+  <mat-icon aria-hidden="true">arrow_back</mat-icon>
+  Importações
+</a>
+
+@if (atual) {
+  <div class="cabecalho">
+    <div>
+      <h1>Comparação de preços</h1>
+      <p class="origem">
+        {{ atual.importacao.fornecedorNome }} · {{ atual.importacao.nomeArquivo }} ·
+        {{ atual.importacao.recebidaEm | date: 'dd/MM/yyyy HH:mm' }}
+      </p>
+    </div>
+    <app-status-importacao [status]="atual.importacao.status" />
+  </div>
+
+  <mat-chip-listbox
+    class="filtro"
+    aria-label="Filtrar itens por classificação"
+    [value]="filtro()"
+    (change)="filtrar($event.value)"
+  >
+    @for (opcao of opcoesFiltro(); track opcao.valor) {
+      <mat-chip-option [value]="opcao.valor">
+        {{ opcao.rotulo }} ({{ opcao.quantidade }})
+      </mat-chip-option>
+    }
+  </mat-chip-listbox>
+
+  @if (atual.itens.length > 0) {
+    <div class="rolagem">
+      <table mat-table [dataSource]="atual.itens" class="tabela">
+        <caption class="oculto">
+          Preço atual de cada item comparado com o último preço válido
+        </caption>
+
+        <ng-container matColumnDef="produto">
+          <th mat-header-cell *matHeaderCellDef scope="col">Produto</th>
+          <td mat-cell *matCellDef="let item" class="produto">
+            <span class="nome-produto">{{ item.produtoNome ?? 'Sem produto' }}</span>
+            <span class="item-fornecedor">
+              {{ item.referencia ? item.referencia + ' · ' : '' }}{{ item.descricao ?? '—' }} ·
+              {{ modalidade(item.modalidadePreco) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="anterior">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Anterior</th>
+          <td mat-cell *matCellDef="let item" class="numero">
+            @if (item.precoAnterior === null) {
+              <span aria-hidden="true">—</span>
+              <span class="oculto">Sem preço anterior</span>
+            } @else {
+              {{ item.precoAnterior | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="atual">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Atual</th>
+          <td mat-cell *matCellDef="let item" class="numero">
+            @if (item.precoAtual === null) {
+              <span aria-hidden="true">—</span>
+              <span class="oculto">Sem preço</span>
+            } @else {
+              {{ item.precoAtual | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="diferenca">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Diferença</th>
+          <td
+            mat-cell
+            *matCellDef="let item"
+            class="numero"
+            [class.alta]="item.classificacao === 'AUMENTOU'"
+            [class.queda]="item.classificacao === 'DIMINUIU'"
+          >
+            @if (item.diferenca === null) {
+              <span aria-hidden="true">—</span>
+              <span class="oculto">Sem diferença</span>
+            } @else {
+              {{ sinal(item.diferenca)
+              }}{{ absoluto(item.diferenca) | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="variacao">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Variação</th>
+          <td
+            mat-cell
+            *matCellDef="let item"
+            class="numero variacao"
+            [class.alta]="item.classificacao === 'AUMENTOU'"
+            [class.queda]="item.classificacao === 'DIMINUIU'"
+          >
+            @if (item.classificacao === 'PENDENTE') {
+              <span class="motivos">{{ item.motivosPendencia.join(' · ') }}</span>
+            } @else if (item.variacaoPercentual === null) {
+              <span aria-hidden="true">—</span>
+              <span class="oculto">Sem variação</span>
+            } @else {
+              {{ sinal(item.variacaoPercentual)
+              }}{{ absoluto(item.variacaoPercentual) | number: '1.2-2' : 'pt-BR' }}%
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="classificacao">
+          <th mat-header-cell *matHeaderCellDef scope="col">Classificação</th>
+          <td mat-cell *matCellDef="let item">
+            <app-rotulo-classificacao [classificacao]="item.classificacao" />
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="precoVenda">
+          <th mat-header-cell *matHeaderCellDef scope="col" class="numero">Preço de venda</th>
+          <td mat-cell *matCellDef="let item" class="numero">
+            @if (item.precoVenda === null) {
+              <span aria-hidden="true">—</span>
+              <span class="oculto">Sem preço de venda</span>
+            } @else {
+              {{ item.precoVenda | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="colunas"></tr>
+        <tr mat-row *matRowDef="let item; columns: colunas"></tr>
+      </table>
+    </div>
+  } @else {
+    <p class="lista-vazia">Nenhum item nesta classificação.</p>
+  }
+
+  @if (ausentes().length > 0) {
+    <section class="ausentes" aria-labelledby="titulo-ausentes">
+      <h2 id="titulo-ausentes">Itens ausentes</h2>
+      <p class="explicacao">
+        Estes itens tinham preço registrado e não vieram neste PDF. Eles continuam ativos com o
+        último preço válido.
+      </p>
+      <ul>
+        @for (ausente of ausentes(); track ausente.apresentacaoId) {
+          <li>
+            <span class="nome-produto">{{ ausente.produtoNome ?? 'Sem produto' }}</span>
+            <span class="item-fornecedor">
+              {{ ausente.referencia ? ausente.referencia + ' · ' : '' }}{{ ausente.descricao }} ·
+              {{ modalidade(ausente.modalidadePreco) }}
+            </span>
+            <span class="ultimo-preco">
+              Último preço válido:
+              {{ ausente.ultimoPrecoValido | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+} @else if (!carregando()) {
+  <p class="lista-vazia">Comparação indisponível para esta importação.</p>
+}
