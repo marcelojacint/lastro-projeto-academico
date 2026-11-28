@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
 import { StatusImportacaoComponente } from '../../componentes/status-importacao/status-importacao';
 import { ErroApi } from '../../modelos/erro-api';
 import { Fornecedor } from '../../modelos/fornecedor';
-import { Importacao } from '../../modelos/importacao';
+import { Importacao, acaoDaImportacao } from '../../modelos/importacao';
 import {
   TAMANHO_MAXIMO_PDF_MB,
   erroDoArquivoPdf,
@@ -17,6 +17,11 @@ import {
 } from '../../servicos/arquivo-pdf';
 import { FornecedorService } from '../../servicos/fornecedor-service';
 import { ImportacaoService } from '../../servicos/importacao-service';
+
+interface ImportacaoDuplicada {
+  mensagem: string;
+  rota: string;
+}
 
 @Component({
   selector: 'app-importacao-nova-pagina',
@@ -44,6 +49,7 @@ export class ImportacaoNovaPagina implements OnInit {
   protected readonly arquivo = signal<File | null>(null);
   protected readonly erroArquivo = signal<string | null>(null);
   protected readonly falhaRegistrada = signal(false);
+  protected readonly duplicada = signal<ImportacaoDuplicada | null>(null);
   protected readonly enviando = signal(false);
   protected readonly recebida = signal<Importacao | null>(null);
 
@@ -79,6 +85,7 @@ export class ImportacaoNovaPagina implements OnInit {
     this.arquivo.set(escolhido);
     this.erroArquivo.set(erroDoArquivoPdf(escolhido));
     this.falhaRegistrada.set(false);
+    this.duplicada.set(null);
   }
 
   protected enviar(): void {
@@ -90,6 +97,7 @@ export class ImportacaoNovaPagina implements OnInit {
     if (this.formulario.invalid || erro !== null || fornecedorId === null || arquivo === null) {
       return;
     }
+    this.duplicada.set(null);
     this.enviando.set(true);
     this.importacaoService.enviar(fornecedorId, arquivo).subscribe({
       next: (importacao) => {
@@ -108,6 +116,7 @@ export class ImportacaoNovaPagina implements OnInit {
     this.arquivo.set(null);
     this.erroArquivo.set(null);
     this.falhaRegistrada.set(false);
+    this.duplicada.set(null);
   }
 
   private marcarErrosDaApi(falha: unknown): void {
@@ -115,6 +124,10 @@ export class ImportacaoNovaPagina implements OnInit {
       return;
     }
     const corpo = falha.error as ErroApi | null;
+    if (falha.status === 409 && corpo?.importacaoId) {
+      this.mostrarDuplicada(corpo.importacaoId, corpo.detail);
+      return;
+    }
     this.falhaRegistrada.set(Boolean(corpo?.importacaoId));
     for (const item of corpo?.erros ?? []) {
       if (item.campo === 'arquivo') {
@@ -124,5 +137,21 @@ export class ImportacaoNovaPagina implements OnInit {
         this.formulario.controls.fornecedorId.setErrors({ api: item.mensagem });
       }
     }
+  }
+
+  private mostrarDuplicada(importacaoId: string, mensagem: string | undefined): void {
+    this.duplicada.set({
+      mensagem: mensagem ?? 'Este arquivo já foi importado para este fornecedor',
+      rota: `/importacoes/${importacaoId}/conferencia`,
+    });
+    this.importacaoService.detalhar(importacaoId).subscribe({
+      next: (detalhe) => {
+        const acao = acaoDaImportacao(detalhe.importacao);
+        const aviso = this.duplicada();
+        if (acao && aviso) {
+          this.duplicada.set({ ...aviso, rota: acao.rota });
+        }
+      },
+    });
   }
 }

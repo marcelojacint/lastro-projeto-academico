@@ -95,6 +95,15 @@
               {{ erroArquivo() }}
             </p>
           }
+          @if (duplicada(); as original) {
+            <div class="aviso-duplicada" role="alert">
+              <mat-icon aria-hidden="true">content_copy</mat-icon>
+              <div>
+                <p>{{ original.mensagem }}. Enviar de novo duplicaria o histórico de preços.</p>
+                <a [routerLink]="original.rota">Abrir a importação original</a>
+              </div>
+            </div>
+          }
           @if (falhaRegistrada()) {
             <p class="ajuda">
               A tentativa ficou registrada como falha na
