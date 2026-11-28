@@ -68,6 +68,11 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
+    public Map<Long, Produto> porId(Collection<Long> ids) {
+        return repository.findAllById(ids).stream().collect(Collectors.toMap(Produto::getId, produto -> produto));
+    }
+
+    @Transactional(readOnly = true)
     public List<Produto> listarAtivos() {
         return repository.findByStatus(StatusProduto.ATIVO);
     }
